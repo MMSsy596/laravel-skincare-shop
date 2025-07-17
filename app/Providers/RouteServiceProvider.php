@@ -10,6 +10,8 @@ use Illuminate\Support\Facades\Route;
 
 class RouteServiceProvider extends ServiceProvider
 {
+    public const HOME = '/dashboard';
+
     /**
      * The path to the "home" route for your application.
      *
@@ -17,7 +19,15 @@ class RouteServiceProvider extends ServiceProvider
      *
      * @var string
      */
-    public const HOME = '/home';
+    public static function redirectUser()
+    {
+        $user = auth()->user();
+        if ($user && $user->role === 'admin') {
+            return '/admin/dashboard';
+        }
+        return '/shop';
+    }
+    
 
     /**
      * Define your route model bindings, pattern filters, and other route configuration.
