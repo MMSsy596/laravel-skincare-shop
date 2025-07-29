@@ -28,6 +28,16 @@ class CartController extends Controller
         return view('cart.index', compact('cart'));
     }
 
+    public function getCartCount()
+    {
+        if (auth()->check()) {
+            return \App\Models\Cart::where('user_id', auth()->id())->sum('quantity');
+        } else {
+            $cart = session()->get('cart', []);
+            return array_sum(array_column($cart, 'quantity'));
+        }
+    }
+
     public function add($id)
     {
         if (auth()->check()) {
@@ -82,4 +92,79 @@ class CartController extends Controller
         return redirect()->route('cart.index');
     }
     
+    public function checkoutForm()
+    {
+        if (auth()->check()) {
+            $cartItems = \App\Models\Cart::with('product')->where('user_id', auth()->id())->get();
+            $cart = [];
+            foreach ($cartItems as $item) {
+                $cart[$item->product_id] = [
+                    'name' => $item->product->name,
+                    'price' => $item->product->price,
+                    'quantity' => $item->quantity,
+                    'image' => $item->product->image
+                ];
+            }
+        } else {
+            $cart = session()->get('cart', []);
+        }
+        if (empty($cart)) {
+            return redirect()->route('cart.index')->with('error', 'Giỏ hàng của bạn đang trống!');
+        }
+        return view('cart.checkout', compact('cart'));
+    }
+
+    public function checkout(Request $request)
+    {
+        $request->validate([
+            'shipping_address' => 'required|string|max:255',
+            'phone' => 'required|string|max:20',
+        ]);
+        if (auth()->check()) {
+            $cartItems = \App\Models\Cart::with('product')->where('user_id', auth()->id())->get();
+            $cart = [];
+            foreach ($cartItems as $item) {
+                $cart[$item->product_id] = [
+                    'name' => $item->product->name,
+                    'price' => $item->product->price,
+                    'quantity' => $item->quantity,
+                    'image' => $item->product->image
+                ];
+            }
+        } else {
+            $cart = session()->get('cart', []);
+        }
+        if (empty($cart)) {
+            return redirect()->route('cart.index')->with('error', 'Giỏ hàng của bạn đang trống!');
+        }
+        // Tính tổng tiền
+        $total = 0;
+        foreach ($cart as $item) {
+            $total += $item['price'] * $item['quantity'];
+        }
+        // Tạo đơn hàng
+        $order = \App\Models\Order::create([
+            'user_id' => auth()->id(),
+            'total' => $total,
+            'status' => 'pending',
+            'shipping_address' => $request->shipping_address,
+            'phone' => $request->phone,
+        ]);
+        // Tạo chi tiết đơn hàng
+        foreach ($cart as $productId => $item) {
+            \App\Models\OrderItem::create([
+                'order_id' => $order->id,
+                'product_id' => $productId,
+                'quantity' => $item['quantity'],
+                'price' => $item['price'],
+            ]);
+        }
+        // Xóa giỏ hàng
+        if (auth()->check()) {
+            \App\Models\Cart::where('user_id', auth()->id())->delete();
+        } else {
+            session()->forget('cart');
+        }
+        return redirect()->route('orders.history')->with('success', 'Đặt hàng thành công!');
+    }
 }

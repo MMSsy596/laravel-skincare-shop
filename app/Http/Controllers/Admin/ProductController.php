@@ -41,7 +41,13 @@ class ProductController extends Controller
             'description' => 'nullable|string',
             'price' => 'required|numeric|min:0',
         ]);
-        \App\Models\Product::create($request->only(['name', 'description', 'price']));
+        $data = $request->only(['name', 'description', 'price']);
+        if ($request->hasFile('image')) {
+            $imagePath = $request->file('image')->store('products', 'public');
+            $data['image'] = $imagePath;
+        }
+        // dd($data);
+        \App\Models\Product::create($data);
         return redirect()->route('admin.products.index')->with('success', 'Thêm sản phẩm thành công!');
     }
 
@@ -84,7 +90,13 @@ class ProductController extends Controller
             'price' => 'required|numeric|min:0',
         ]);
         $product = \App\Models\Product::findOrFail($id);
-        $product->update($request->only(['name', 'description', 'price']));
+        $data = $request->only(['name', 'description', 'price']);
+        if ($request->hasFile('image')) {
+            $imagePath = $request->file('image')->store('products', 'public');
+            $data['image'] = $imagePath;
+            // dd($data['image']); // Xem đường dẫn ảnh mới
+        }
+        $product->update($data);
         return redirect()->route('admin.products.index')->with('success', 'Cập nhật sản phẩm thành công!');
     }
 

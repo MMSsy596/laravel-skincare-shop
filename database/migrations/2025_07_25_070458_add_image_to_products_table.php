@@ -13,16 +13,20 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->string('role')->default('user'); // Có thể là 'user' hoặc 'admin'
+        Schema::table('products', function (Blueprint $table) {
+            $table->string('image')->nullable()->after('price');
         });
     }
-    
+
+    /**
+     * Reverse the migrations.
+     *
+     * @return void
+     */
     public function down()
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn('role');
+        Schema::table('products', function (Blueprint $table) {
+            $table->dropColumn('image');
         });
     }
-    
 };

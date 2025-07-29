@@ -15,11 +15,16 @@ return new class extends Migration
     {
         Schema::create('orders', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->decimal('total_price', 10, 2);
-            $table->string('status')->default('pending'); // pending, confirmed, shipped, etc.
+            $table->unsignedBigInteger('user_id');
+            $table->decimal('total', 10, 2);
+            $table->enum('status', ['pending', 'processing', 'completed', 'cancelled'])->default('pending');
+            $table->unsignedBigInteger('canceller_id')->nullable();
+            $table->text('shipping_address')->nullable();
+            $table->string('phone')->nullable();
             $table->timestamps();
-            
+
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+            $table->foreign('canceller_id')->references('id')->on('users')->nullOnDelete();
         });
     }
 
