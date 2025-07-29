@@ -609,12 +609,159 @@
                 addMessage('user', message);
                 input.value = '';
                 
-                // Simulate AI response
-                setTimeout(() => {
-                    const aiResponse = generateAIResponse(message);
-                    addMessage('ai', aiResponse);
-                }, 1000);
+                // Show typing indicator
+                const typingDiv = document.createElement('div');
+                typingDiv.className = 'mb-3';
+                typingDiv.innerHTML = `
+                    <div class="d-inline-block p-3 rounded-3 bg-light text-dark">
+                        <i class="fas fa-robot me-2"></i>AI đang phân tích...
+                    </div>
+                `;
+                document.getElementById('aiChatMessages').appendChild(typingDiv);
+                
+                // Call AI API
+                fetchAIResponse(message).then(response => {
+                    // Remove typing indicator
+                    document.getElementById('aiChatMessages').removeChild(typingDiv);
+                    addMessage('ai', response);
+                }).catch(error => {
+                    // Remove typing indicator
+                    document.getElementById('aiChatMessages').removeChild(typingDiv);
+                    addMessage('ai', 'Xin lỗi, tôi đang gặp sự cố. Vui lòng thử lại sau.');
+                });
             }
+        }
+
+        async function fetchAIResponse(message) {
+            const lowerMessage = message.toLowerCase();
+            
+            // Check for specific queries that need API calls
+            if (lowerMessage.includes('còn hàng') || lowerMessage.includes('tồn kho')) {
+                return await checkProductStock(message);
+            }
+            
+            if (lowerMessage.includes('da') && (lowerMessage.includes('nên') || lowerMessage.includes('phù hợp'))) {
+                return await getSkinRecommendations(message);
+            }
+            
+            if (lowerMessage.includes('giá') || lowerMessage.includes('bao nhiêu')) {
+                return await getPriceInfo(message);
+            }
+            
+            // Default AI response
+            return generateAIResponse(message);
+        }
+
+        async function checkProductStock(message) {
+            try {
+                // Extract product name from message
+                const productName = extractProductName(message);
+                if (productName) {
+                    const response = await fetch(`/ai/stock-check?product_name=${encodeURIComponent(productName)}`);
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        return `📦 **${data.stock_info.product_name}**\n\n` +
+                               `Tình trạng: ${data.stock_info.status}\n` +
+                               `Số lượng: ${data.stock_info.current_stock} sản phẩm\n\n` +
+                               `${data.stock_info.recommendation}`;
+                    }
+                }
+                
+                return 'Để kiểm tra tình trạng hàng chính xác, bạn có thể:\n1. Xem trực tiếp trên trang sản phẩm\n2. Liên hệ hotline: 1900-xxxx\n3. Chat với chúng tôi để được tư vấn cụ thể';
+            } catch (error) {
+                return 'Để kiểm tra tình trạng hàng, vui lòng xem trực tiếp trên trang sản phẩm hoặc liên hệ chúng tôi.';
+            }
+        }
+
+        async function getSkinRecommendations(message) {
+            try {
+                // Extract skin type from message
+                const skinType = extractSkinType(message);
+                if (skinType) {
+                    const response = await fetch(`/ai/skin-analysis?skin_type=${skinType}`);
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        const analysis = data.analysis;
+                        let response = `🎯 **Tư vấn cho da ${analysis.skin_type}**\n\n`;
+                        
+                        if (analysis.recommendations) {
+                            response += `**Thành phần nên dùng:**\n`;
+                            analysis.recommendations.ingredients.forEach(ingredient => {
+                                response += `• ${ingredient}\n`;
+                            });
+                            response += `\n**Thành phần nên tránh:**\n`;
+                            analysis.recommendations.avoid.forEach(item => {
+                                response += `• ${item}\n`;
+                            });
+                        }
+                        
+                        if (analysis.products && analysis.products.length > 0) {
+                            response += `\n**Sản phẩm phù hợp:**\n`;
+                            analysis.products.slice(0, 3).forEach(product => {
+                                response += `• ${product.name} - ${product.formatted_price}\n`;
+                            });
+                        }
+                        
+                        return response;
+                    }
+                }
+                
+                return generateAIResponse(message);
+            } catch (error) {
+                return generateAIResponse(message);
+            }
+        }
+
+        async function getPriceInfo(message) {
+            try {
+                const productName = extractProductName(message);
+                if (productName) {
+                    // Search for product
+                    const response = await fetch(`/shop?search=${encodeURIComponent(productName)}`);
+                    // This would need to be implemented as an API endpoint
+                    return `Giá sản phẩm được hiển thị rõ ràng trên từng trang sản phẩm. Bạn có thể:\n1. Xem giá trực tiếp trên website\n2. So sánh giá giữa các sản phẩm\n3. Liên hệ để được tư vấn về sản phẩm phù hợp ngân sách`;
+                }
+                
+                return 'Giá sản phẩm được hiển thị rõ ràng trên từng trang sản phẩm. Bạn có thể xem giá trực tiếp trên website hoặc liên hệ để được tư vấn.';
+            } catch (error) {
+                return 'Giá sản phẩm được hiển thị trên từng trang sản phẩm. Bạn có thể so sánh giá và chọn sản phẩm phù hợp với ngân sách.';
+            }
+        }
+
+        function extractProductName(message) {
+            // Simple extraction - in real app, you'd use NLP
+            const products = [
+                'kem dưỡng ẩm', 'serum', 'sữa rửa mặt', 'kem chống nắng', 'mặt nạ',
+                'kem nền', 'son môi', 'phấn phủ', 'nước hoa', 'dầu gội', 'serum tóc'
+            ];
+            
+            for (const product of products) {
+                if (message.toLowerCase().includes(product)) {
+                    return product;
+                }
+            }
+            return null;
+        }
+
+        function extractSkinType(message) {
+            const skinTypes = {
+                'da khô': 'dry',
+                'da dầu': 'oily',
+                'da hỗn hợp': 'combination',
+                'da nhạy cảm': 'sensitive',
+                'da thường': 'normal',
+                'da mụn': 'acne-prone',
+                'da trưởng thành': 'mature'
+            };
+            
+            for (const [key, value] of Object.entries(skinTypes)) {
+                if (message.toLowerCase().includes(key)) {
+                    return value;
+                }
+            }
+            return null;
         }
 
         function addMessage(type, message) {
@@ -644,17 +791,58 @@
                 'mụn': 'Để trị mụn hiệu quả, tôi khuyên: Sản phẩm chứa Salicylic Acid hoặc Benzoyl Peroxide.',
                 'chống lão hóa': 'Sản phẩm chống lão hóa tốt nhất: Serum Vitamin C, Retinol và kem chống nắng SPF 50+.',
                 'trang điểm': 'Để trang điểm đẹp tự nhiên: Kem nền phù hợp với tone da, phấn phủ và son môi.',
-                'tẩy trang': 'Tẩy trang hiệu quả: Dầu tẩy trang hoặc nước tẩy trang dịu nhẹ.'
+                'tẩy trang': 'Tẩy trang hiệu quả: Dầu tẩy trang hoặc nước tẩy trang dịu nhẹ.',
+                'còn hàng': 'Để kiểm tra tình trạng hàng, bạn có thể xem trực tiếp trên trang sản phẩm hoặc liên hệ với chúng tôi qua hotline.',
+                'giá': 'Giá sản phẩm được hiển thị trên từng trang sản phẩm. Bạn có thể so sánh giá và chọn sản phẩm phù hợp với ngân sách.',
+                'giao hàng': 'Chúng tôi giao hàng toàn quốc với thời gian 2-5 ngày làm việc. Miễn phí ship cho đơn hàng từ 500k.',
+                'đổi trả': 'Chính sách đổi trả trong 30 ngày nếu sản phẩm có vấn đề về chất lượng.',
+                'thành phần': 'Thành phần được liệt kê chi tiết trên trang sản phẩm. Bạn có thể xem để kiểm tra phù hợp với làn da.',
+                'hướng dẫn': 'Hướng dẫn sử dụng được cung cấp trên bao bì và trang sản phẩm. Nếu cần tư vấn thêm, hãy liên hệ chúng tôi.',
+                'serum': 'Serum là sản phẩm chăm sóc da cô đặc. Tùy theo nhu cầu: Vitamin C (làm sáng), Hyaluronic Acid (dưỡng ẩm), Retinol (chống lão hóa).',
+                'kem dưỡng': 'Kem dưỡng ẩm nên chọn theo loại da: Da khô (dưỡng ẩm sâu), Da dầu (không gây nhờn), Da hỗn hợp (cân bằng).',
+                'sữa rửa mặt': 'Sữa rửa mặt phù hợp: Da khô (dạng kem), Da dầu (dạng gel), Da nhạy cảm (không chứa hương liệu).',
+                'mặt nạ': 'Mặt nạ nên dùng 2-3 lần/tuần. Loại phù hợp: Dưỡng ẩm, Làm sáng, Se khít lỗ chân lông.',
+                'chống nắng': 'Kem chống nắng SPF 30-50, thoa lại sau 2-3 giờ khi hoạt động ngoài trời.',
+                'tẩy tế bào chết': 'Tẩy tế bào chết 1-2 lần/tuần. Chọn loại dịu nhẹ cho da nhạy cảm.',
+                'xịt khoáng': 'Xịt khoáng giúp cấp ẩm tức thì, có thể dùng nhiều lần trong ngày.',
+                'tinh chất': 'Tinh chất chứa hoạt chất cô đặc, thường dùng trước kem dưỡng.',
+                'phấn phủ': 'Phấn phủ giúp kiềm dầu và định hình lớp trang điểm.',
+                'son môi': 'Son môi nên chọn theo tone da và sự kiện. Có thể dưỡng môi trước khi thoa.',
+                'phấn mắt': 'Phấn mắt có nhiều màu sắc, phù hợp với từng dịp và trang phục.',
+                'mascara': 'Mascara giúp làm dài và dày lông mi. Chọn loại không lem và dễ tẩy.',
+                'nước hoa': 'Nước hoa có nhiều mùi hương khác nhau. Nên thử trước khi mua.',
+                'dầu gội': 'Dầu gội nên chọn theo loại tóc: Khô, Dầu, Hỗn hợp, Nhuộm.',
+                'dầu xả': 'Dầu xả giúp mềm mượt tóc, thoa từ giữa thân tóc đến ngọn.',
+                'serum tóc': 'Serum tóc giúp phục hồi và bảo vệ tóc khỏi hư tổn.',
+                'dụng cụ': 'Dụng cụ làm đẹp: Cọ trang điểm, Gương, Kẹp mi, Bông tẩy trang.'
             };
 
             const lowerMessage = message.toLowerCase();
+            
+            // Check for exact matches first
             for (const [key, response] of Object.entries(responses)) {
                 if (lowerMessage.includes(key)) {
                     return response;
                 }
             }
 
-            return 'Cảm ơn bạn đã hỏi! Tôi có thể tư vấn về: da khô, da dầu, da nhạy cảm, trị mụn, chống lão hóa, trang điểm, tẩy trang. Bạn quan tâm đến vấn đề gì?';
+            // Check for product availability
+            if (lowerMessage.includes('còn') && (lowerMessage.includes('hàng') || lowerMessage.includes('không'))) {
+                return 'Để kiểm tra tình trạng hàng chính xác, bạn có thể:\n1. Xem trực tiếp trên trang sản phẩm\n2. Liên hệ hotline: 1900-xxxx\n3. Chat với chúng tôi để được tư vấn cụ thể';
+            }
+
+            // Check for skin type recommendations
+            if (lowerMessage.includes('da') && lowerMessage.includes('nên')) {
+                return 'Dựa trên loại da của bạn, tôi gợi ý:\n- Da khô: Kem dưỡng ẩm sâu, Serum Hyaluronic Acid\n- Da dầu: Sữa rửa mặt gel, Kem dưỡng không gây nhờn\n- Da hỗn hợp: Sản phẩm cân bằng\n- Da nhạy cảm: Sản phẩm dịu nhẹ, không hương liệu';
+            }
+
+            // Check for price inquiries
+            if (lowerMessage.includes('giá') || lowerMessage.includes('bao nhiêu')) {
+                return 'Giá sản phẩm được hiển thị rõ ràng trên từng trang sản phẩm. Bạn có thể:\n1. Xem giá trực tiếp trên website\n2. So sánh giá giữa các sản phẩm\n3. Liên hệ để được tư vấn về sản phẩm phù hợp ngân sách';
+            }
+
+            // Default response with suggestions
+            return 'Cảm ơn bạn đã hỏi! Tôi có thể tư vấn về:\n\n🔍 **Tìm kiếm sản phẩm:**\n- "còn hàng không", "giá bao nhiêu"\n\n👩‍⚕️ **Tư vấn da:**\n- "da khô", "da dầu", "da nhạy cảm"\n- "mụn", "chống lão hóa", "dưỡng ẩm"\n\n💄 **Sản phẩm cụ thể:**\n- "serum", "kem dưỡng", "sữa rửa mặt"\n- "trang điểm", "nước hoa", "chăm sóc tóc"\n\n🚚 **Dịch vụ:**\n- "giao hàng", "đổi trả", "hướng dẫn"\n\nBạn quan tâm đến vấn đề gì?';
         }
 
         // Enter key to send message

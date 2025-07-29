@@ -1,66 +1,286 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# BeautyAI Shop - Shop Mỹ Phẩm Online với AI
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Một ứng dụng e-commerce hiện đại chuyên về mỹ phẩm với tích hợp AI thông minh để tư vấn sản phẩm và quản lý kho hàng.
 
-## About Laravel
+## 🌟 Tính năng chính
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+### 🛍️ E-commerce Cơ bản
+- **Quản lý sản phẩm**: CRUD đầy đủ với thông tin chi tiết mỹ phẩm
+- **Giỏ hàng thông minh**: Hỗ trợ cả khách và thành viên
+- **Thanh toán**: Tích hợp VRPay
+- **Đánh giá sản phẩm**: Hệ thống review và rating
+- **Tìm kiếm & Lọc**: Theo danh mục, loại da, độ tuổi, giá cả
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+### 🤖 AI Assistant
+- **Chatbot thông minh**: Tư vấn sản phẩm theo loại da
+- **Kiểm tra tồn kho**: Hỏi AI về tình trạng hàng
+- **Gợi ý sản phẩm**: Dựa trên loại da và nhu cầu
+- **Phân tích thành phần**: AI phân tích và đưa ra lời khuyên
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+### 👩‍💼 Admin Panel
+- **Dashboard thống kê**: Tổng quan về sản phẩm, đơn hàng
+- **Quản lý sản phẩm**: Giao diện hiện đại với filtering
+- **Quản lý đơn hàng**: Theo dõi trạng thái và xử lý
+- **Báo cáo**: Thống kê doanh thu và xu hướng
 
-## Learning Laravel
+## 🚀 Cài đặt
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+### Yêu cầu hệ thống
+- PHP 8.0+
+- Laravel 9
+- MySQL/PostgreSQL
+- Composer
+- Node.js & NPM
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+### Bước 1: Clone repository
+```bash
+git clone <repository-url>
+cd my-crud-app
+```
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains over 2000 video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+### Bước 2: Cài đặt dependencies
+```bash
+composer install
+npm install
+```
 
-## Laravel Sponsors
+### Bước 3: Cấu hình môi trường
+```bash
+cp .env.example .env
+php artisan key:generate
+```
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the Laravel [Patreon page](https://patreon.com/taylorotwell).
+Cấu hình database trong file `.env`:
+```env
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=beauty_ai_shop
+DB_USERNAME=root
+DB_PASSWORD=
+```
 
-### Premium Partners
+### Bước 4: Chạy migrations và seeders
+```bash
+php artisan migrate
+php artisan db:seed --class=BeautyProductsSeeder
+```
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Cubet Techno Labs](https://cubettech.com)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[Many](https://www.many.co.uk)**
-- **[Webdock, Fast VPS Hosting](https://www.webdock.io/en)**
-- **[DevSquad](https://devsquad.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[OP.GG](https://op.gg)**
-- **[WebReinvent](https://webreinvent.com/?utm_source=laravel&utm_medium=github&utm_campaign=patreon-sponsors)**
-- **[Lendio](https://lendio.com)**
+### Bước 5: Tạo storage link
+```bash
+php artisan storage:link
+```
 
-## Contributing
+### Bước 6: Build assets
+```bash
+npm run build
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+### Bước 7: Chạy server
+```bash
+php artisan serve
+```
 
-## Code of Conduct
+## 📱 Sử dụng
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+### Trang chủ
+- Truy cập `http://localhost:8000`
+- Xem sản phẩm nổi bật và danh mục
+- Sử dụng AI chatbot để được tư vấn
 
-## Security Vulnerabilities
+### Shop
+- Truy cập `/shop` để xem tất cả sản phẩm
+- Sử dụng bộ lọc theo danh mục, loại da, giá cả
+- Tìm kiếm sản phẩm theo tên hoặc thương hiệu
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+### AI Assistant
+- Click vào icon AI ở góc phải dưới
+- Hỏi về sản phẩm phù hợp với loại da
+- Kiểm tra tình trạng tồn kho
+- Nhận tư vấn về thành phần và cách sử dụng
 
-## License
+### Admin Panel
+- Truy cập `/admin` (cần đăng nhập với quyền admin)
+- Quản lý sản phẩm tại `/admin/products`
+- Xem thống kê và báo cáo
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+## 🎨 Giao diện
+
+### Thiết kế hiện đại
+- **Responsive**: Tương thích mọi thiết bị
+- **Material Design**: Giao diện đẹp mắt, dễ sử dụng
+- **Animations**: Hiệu ứng mượt mà với AOS
+- **Color Scheme**: Bảng màu chuyên nghiệp cho mỹ phẩm
+
+### Components
+- **Hero Section**: Banner chính với call-to-action
+- **Product Cards**: Hiển thị sản phẩm với rating và quick actions
+- **AI Chatbot**: Giao diện chat thân thiện
+- **Filter Panel**: Bộ lọc thông minh với AJAX
+- **Admin Dashboard**: Thống kê trực quan
+
+## 🤖 AI Features
+
+### Chatbot Commands
+```
+"da khô" - Tư vấn cho da khô
+"da dầu" - Tư vấn cho da dầu
+"còn hàng không" - Kiểm tra tồn kho
+"giá bao nhiêu" - Thông tin giá
+"serum" - Tư vấn về serum
+"chống lão hóa" - Sản phẩm chống lão hóa
+```
+
+### AI Analysis
+- **Skin Type Analysis**: Phân tích loại da và đưa ra gợi ý
+- **Ingredient Analysis**: Phân tích thành phần và lợi ích
+- **Product Recommendations**: Gợi ý sản phẩm phù hợp
+- **Stock Management**: Kiểm tra và cảnh báo tồn kho
+
+## 📊 Database Schema
+
+### Products Table
+```sql
+- id, name, description, price
+- category, brand, sku, stock
+- skin_type, age_group, ingredients
+- usage_instructions, shelf_life, weight, dimensions
+- is_featured, is_active, image
+- created_at, updated_at
+```
+
+### Categories
+- **skincare**: Chăm sóc da
+- **makeup**: Trang điểm
+- **perfume**: Nước hoa
+- **haircare**: Chăm sóc tóc
+- **bodycare**: Chăm sóc cơ thể
+- **tools**: Dụng cụ làm đẹp
+
+### Skin Types
+- **normal**: Da thường
+- **dry**: Da khô
+- **oily**: Da dầu
+- **combination**: Da hỗn hợp
+- **sensitive**: Da nhạy cảm
+- **acne-prone**: Da mụn
+- **mature**: Da trưởng thành
+
+## 🔧 API Endpoints
+
+### AI Endpoints
+```
+GET /ai/recommendations - Gợi ý sản phẩm
+GET /ai/stock-check - Kiểm tra tồn kho
+GET /ai/skin-analysis - Phân tích loại da
+GET /ai/product-analysis - Phân tích sản phẩm
+GET /ai/trending - Sản phẩm trending
+GET /ai/personalized - Gợi ý cá nhân hóa
+```
+
+### Product Endpoints
+```
+GET /shop - Danh sách sản phẩm
+GET /products/{id} - Chi tiết sản phẩm
+POST /cart/add - Thêm vào giỏ hàng
+GET /cart - Xem giỏ hàng
+```
+
+## 🛠️ Development
+
+### Cấu trúc thư mục
+```
+app/
+├── Http/Controllers/
+│   ├── AIController.php
+│   ├── ProductController.php
+│   ├── CartController.php
+│   └── Admin/
+│       └── ProductController.php
+├── Models/
+│   ├── Product.php
+│   ├── User.php
+│   └── Review.php
+└── ...
+
+resources/views/
+├── layouts/
+│   └── app.blade.php
+├── shop.blade.php
+├── products/
+│   └── show.blade.php
+└── admin/products/
+    ├── index.blade.php
+    ├── create.blade.php
+    └── edit.blade.php
+```
+
+### Customization
+1. **Thay đổi theme**: Chỉnh sửa CSS variables trong `app.blade.php`
+2. **Thêm danh mục**: Cập nhật `Product::CATEGORIES`
+3. **Mở rộng AI**: Thêm logic trong `AIController`
+4. **Tùy chỉnh chatbot**: Chỉnh sửa responses trong `generateAIResponse()`
+
+## 📈 Performance
+
+### Optimization
+- **Lazy Loading**: Images và components
+- **Caching**: Product data và AI responses
+- **Pagination**: Danh sách sản phẩm
+- **CDN**: Static assets
+
+### Monitoring
+- **Error Tracking**: Laravel Telescope
+- **Performance**: Laravel Debugbar
+- **Logs**: Application và AI interactions
+
+## 🔒 Security
+
+### Authentication
+- Laravel Breeze
+- Google OAuth (Socialite)
+- Role-based access control
+
+### Data Protection
+- CSRF protection
+- SQL injection prevention
+- XSS protection
+- File upload validation
+
+## 🚀 Deployment
+
+### Production Setup
+1. Cấu hình environment variables
+2. Optimize autoloader: `composer install --optimize-autoloader --no-dev`
+3. Cache config: `php artisan config:cache`
+4. Cache routes: `php artisan route:cache`
+5. Cache views: `php artisan view:cache`
+
+### Server Requirements
+- PHP 8.0+
+- MySQL 5.7+ hoặc PostgreSQL 10+
+- Redis (optional, for caching)
+- SSL certificate (recommended)
+
+## 🤝 Contributing
+
+1. Fork repository
+2. Tạo feature branch: `git checkout -b feature/new-feature`
+3. Commit changes: `git commit -am 'Add new feature'`
+4. Push branch: `git push origin feature/new-feature`
+5. Tạo Pull Request
+
+## 📄 License
+
+MIT License - xem file LICENSE để biết thêm chi tiết.
+
+## 📞 Support
+
+- **Email**: support@beauty-ai-shop.com
+- **Documentation**: `/docs`
+- **Issues**: GitHub Issues
+- **Discord**: BeautyAI Community
+
+---
+
+**BeautyAI Shop** - Nơi mỹ phẩm gặp gỡ trí tuệ nhân tạo! ✨
