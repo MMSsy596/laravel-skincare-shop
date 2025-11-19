@@ -36,7 +36,7 @@
                                         <tr class="{{ $isOutOfStock ? 'table-warning' : '' }}">
                                             <td>
                                                 <div class="d-flex align-items-center">
-                                                    <img src="{{ $item['image'] ?? 'https://via.placeholder.com/80x80/CCCCCC/FFFFFF?text=Product' }}" 
+                                                    <img src="{{ $item['image'] ? asset('storage/' . $item['image']) : 'https://via.placeholder.com/80x80/CCCCCC/FFFFFF?text=Product' }}" 
                                                          alt="{{ $item['name'] }}" 
                                                          class="rounded me-3" 
                                                          style="width: 80px; height: 80px; object-fit: cover;">

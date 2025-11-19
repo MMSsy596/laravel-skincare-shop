@@ -12,40 +12,13 @@
     <link rel="stylesheet" href="https://fonts.bunny.net/css?family=figtree:400,600&display=swap" />
     <!-- Styles -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    <style>
-        .sidebar {
-            min-height: 100vh;
-            background: #2c3e50;
-        }
-        .sidebar .nav-link {
-            color: #ecf0f1;
-            padding: 12px 20px;
-            border-radius: 0;
-        }
-        .sidebar .nav-link:hover {
-            background: #34495e;
-            color: #fff;
-        }
-        .sidebar .nav-link.active {
-            background: #3498db;
-            color: #fff;
-        }
-        .main-content {
-            min-height: 100vh;
-            background: #f8f9fa;
-        }
-        .top-navbar {
-            background: #fff;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-    </style>
 </head>
-<body>
+<body class="admin-body">
     <div class="container-fluid">
         <div class="row">
             <!-- Sidebar -->
             <div class="col-md-3 col-lg-2 px-0">
-                <div class="sidebar">
+                <div class="admin-sidebar">
                     <div class="p-3 text-center">
                         <h5 class="text-white">Admin Panel</h5>
                     </div>
@@ -61,6 +34,9 @@
                         </a>
                         <a class="nav-link {{ request()->routeIs('admin.reviews.*') ? 'active' : '' }}" href="{{ route('admin.reviews.index') }}">
                             <i class="fas fa-star me-2"></i> Quản lý đánh giá
+                        </a>
+                        <a class="nav-link {{ request()->routeIs('admin.vouchers.*') ? 'active' : '' }}" href="{{ route('admin.vouchers.index') }}">
+                            <i class="fas fa-ticket-alt me-2"></i> Quản lý voucher
                         </a>
                         <a class="nav-link" href="{{ route('shop') }}">
                             <i class="fas fa-store me-2"></i> Xem trang Shop
@@ -78,9 +54,9 @@
             
             <!-- Main Content -->
             <div class="col-md-9 col-lg-10 px-0">
-                <div class="main-content">
+                <div class="admin-main">
                     <!-- Top Navbar -->
-                    <div class="top-navbar p-3">
+                    <div class="admin-topbar p-3">
                         <div class="d-flex justify-content-between align-items-center">
                             <h4 class="mb-0">@yield('page-title', 'Dashboard')</h4>
                             <div class="d-flex align-items-center">

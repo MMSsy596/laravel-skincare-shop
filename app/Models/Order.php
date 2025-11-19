@@ -11,6 +11,7 @@ class Order extends Model
 
     protected $fillable = [
         'user_id',
+        'voucher_id',
         'total',
         'status',
         'shipping_address',
@@ -20,11 +21,22 @@ class Order extends Model
         'transaction_id',
         'payment_notes',
         'paid_at',
-        'canceller_id'
+        'canceller_id',
+        'voucher_code',
+        'voucher_discount',
+        'shipping_fee',
+        'latitude',
+        'longitude',
+        'distance',
     ];
 
     protected $casts = [
         'total' => 'decimal:2',
+        'voucher_discount' => 'decimal:2',
+        'shipping_fee' => 'decimal:2',
+        'latitude' => 'decimal:8',
+        'longitude' => 'decimal:8',
+        'distance' => 'decimal:2',
         'paid_at' => 'datetime',
     ];
 
@@ -65,6 +77,11 @@ class Order extends Model
     public function canceller()
     {
         return $this->belongsTo(User::class, 'canceller_id');
+    }
+
+    public function voucher()
+    {
+        return $this->belongsTo(Voucher::class);
     }
 
     // Payment Methods

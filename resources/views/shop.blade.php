@@ -393,34 +393,4 @@ document.querySelectorAll('a[href="#ai-consultation"]').forEach(link => {
 });
 </script>
 
-<style>
-.list-view .card {
-    flex-direction: row;
-}
-
-.list-view .card-img-top {
-    width: 200px;
-    height: 200px !important;
-    flex-shrink: 0;
-}
-
-.list-view .card-body {
-    flex: 1;
-}
-
-.toast {
-    min-width: 300px;
-}
-
-@media (max-width: 768px) {
-    .list-view .card {
-        flex-direction: column;
-    }
-    
-    .list-view .card-img-top {
-        width: 100%;
-        height: 200px !important;
-    }
-}
-</style>
 @endsection 

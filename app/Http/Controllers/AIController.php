@@ -65,21 +65,36 @@ class AIController extends Controller
     public function checkStock(Request $request)
     {
         $productId = $request->product_id;
-        $product = Product::find($productId);
+        $productName = $request->product_name;
+        
+        $product = null;
+        
+        // Tìm sản phẩm theo ID hoặc tên
+        if ($productId) {
+            $product = Product::find($productId);
+        } elseif ($productName) {
+            $product = Product::where('name', 'like', '%' . $productName . '%')
+                ->orWhere('name', 'like', '%' . str_replace(' ', '%', $productName) . '%')
+                ->first();
+        }
         
         if (!$product) {
+            // Nếu không tìm thấy sản phẩm cụ thể, trả về thông tin tổng quan
             return response()->json([
                 'success' => false,
-                'message' => 'Không tìm thấy sản phẩm'
+                'message' => 'Không tìm thấy sản phẩm. Bạn có thể tìm kiếm sản phẩm trên trang Shop.',
+                'suggestion' => 'Hãy thử tìm kiếm với từ khóa khác hoặc xem danh sách sản phẩm tại /shop'
             ]);
         }
         
         $stockInfo = [
+            'product_id' => $product->id,
             'product_name' => $product->name,
             'current_stock' => $product->stock,
             'status' => $product->stock_status,
             'is_available' => $product->is_in_stock,
-            'recommendation' => $this->getStockRecommendation($product)
+            'recommendation' => $this->getStockRecommendation($product),
+            'product_url' => route('product.show', $product->id)
         ];
         
         return response()->json([

@@ -4,8 +4,8 @@
 <div class="container py-4">
     <div class="row justify-content-center">
         <div class="col-lg-10">
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-primary text-white">
+            <div class="card border-0 shadow-sm admin-form-card">
+                <div class="card-header admin-card-header-primary">
                     <h4 class="mb-0">
                         <i class="fas fa-plus me-2"></i>Thêm sản phẩm mỹ phẩm mới
                     </h4>
@@ -238,34 +238,4 @@ document.getElementById('category').addEventListener('change', function() {
 });
 </script>
 
-<style>
-.form-label {
-    color: var(--text-dark);
-}
-
-.form-control:focus,
-.form-select:focus {
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 0.2rem rgba(255, 107, 157, 0.25);
-}
-
-.form-check-input:checked {
-    background-color: var(--primary-color);
-    border-color: var(--primary-color);
-}
-
-.card-header {
-    background: var(--gradient-primary) !important;
-}
-
-.btn-primary {
-    background: var(--gradient-primary);
-    border: none;
-}
-
-.btn-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-hover);
-}
-</style>
 @endsection

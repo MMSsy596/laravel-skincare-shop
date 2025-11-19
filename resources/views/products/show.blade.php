@@ -402,49 +402,4 @@ function showToast(message, type = 'info') {
 }
 </script>
 
-<style>
-.product-gallery .main-image img {
-    width: 100%;
-    height: 400px;
-    object-fit: cover;
-}
-
-.thumbnail-images img:hover {
-    border-color: var(--primary-color);
-}
-
-.rating-input {
-    display: flex;
-    gap: 5px;
-}
-
-.star-label {
-    cursor: pointer;
-    font-size: 24px;
-    color: #ddd;
-    transition: color 0.2s;
-}
-
-.star-label:hover,
-.star-label.active {
-    color: #ffc107;
-}
-
-.product-card {
-    transition: transform 0.2s, box-shadow 0.2s;
-}
-
-.product-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 10px 25px rgba(0,0,0,0.1) !important;
-}
-
-.ingredients-tags .badge {
-    font-size: 0.8rem;
-}
-
-.toast-container {
-    z-index: 9999;
-}
-</style>
 @endsection 

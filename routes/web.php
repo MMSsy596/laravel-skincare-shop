@@ -6,10 +6,12 @@ use App\Http\Controllers\CartController;
 use App\Http\Controllers\Admin\ProductController as AdminProductController;
 use App\Http\Controllers\Admin\ReviewController as AdminReviewController;
 use App\Http\Controllers\Admin\OrderController as AdminOrderController;
+use App\Http\Controllers\Admin\VoucherController as AdminVoucherController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\AIController;
 use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\ShippingController;
 
 /*
 |--------------------------------------------------------------------------
@@ -90,6 +92,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/cart/update/{id}', [CartController::class, 'update'])->name('cart.update');
     Route::get('/checkout', [CartController::class, 'checkoutForm'])->name('cart.checkout')->middleware('check.stock');
     Route::post('/checkout', [CartController::class, 'checkout'])->name('cart.checkout.submit')->middleware('check.stock');
+    Route::post('/cart/apply-voucher', [CartController::class, 'applyVoucher'])->name('cart.apply-voucher');
+    Route::post('/cart/remove-voucher', [CartController::class, 'removeVoucher'])->name('cart.remove-voucher');
 
     Route::middleware('is_admin')->group(function () {
         Route::resource('/admin/products', AdminProductController::class)->names([
@@ -118,6 +122,17 @@ Route::middleware('auth')->group(function () {
             'show' => 'admin.orders.show',
             'update' => 'admin.orders.update',
         ]);
+
+        // Quản lý voucher
+        Route::resource('/admin/vouchers', AdminVoucherController::class)->names([
+            'index' => 'admin.vouchers.index',
+            'create' => 'admin.vouchers.create',
+            'store' => 'admin.vouchers.store',
+            'show' => 'admin.vouchers.show',
+            'edit' => 'admin.vouchers.edit',
+            'update' => 'admin.vouchers.update',
+            'destroy' => 'admin.vouchers.destroy',
+        ]);
     });
 
     // Đánh giá sản phẩm
@@ -140,13 +155,20 @@ Route::middleware('auth')->group(function () {
 
     // AI Routes (cần đăng nhập)
     Route::prefix('ai')->group(function () {
-        Route::get('/recommendations', [AIController::class, 'getRecommendations'])->name('ai.recommendations');
-        Route::get('/stock-check', [AIController::class, 'checkStock'])->name('ai.stock-check');
-        Route::get('/skin-analysis', [AIController::class, 'getSkinAnalysis'])->name('ai.skin-analysis');
         Route::get('/product-analysis', [AIController::class, 'getProductAnalysis'])->name('ai.product-analysis');
-        Route::get('/trending', [AIController::class, 'getTrendingProducts'])->name('ai.trending');
         Route::get('/personalized', [AIController::class, 'getPersonalizedRecommendations'])->name('ai.personalized');
     });
+});
+
+// API công khai: tính phí vận chuyển
+Route::post('/shipping/calculate', [ShippingController::class, 'calculateShipping'])->name('shipping.calculate');
+
+// AI Routes công khai (không cần đăng nhập)
+Route::prefix('ai')->group(function () {
+    Route::get('/recommendations', [AIController::class, 'getRecommendations'])->name('ai.recommendations');
+    Route::get('/stock-check', [AIController::class, 'checkStock'])->name('ai.stock-check');
+    Route::get('/skin-analysis', [AIController::class, 'getSkinAnalysis'])->name('ai.skin-analysis');
+    Route::get('/trending', [AIController::class, 'getTrendingProducts'])->name('ai.trending');
 });
 
 require __DIR__.'/auth.php';

@@ -342,37 +342,4 @@ document.querySelectorAll('#category, #status, #stock').forEach(select => {
 });
 </script>
 
-<style>
-.card {
-    border-radius: 10px;
-}
-
-.table th {
-    border-top: none;
-    font-weight: 600;
-    color: var(--text-dark);
-}
-
-.btn-group .btn {
-    border-radius: 5px !important;
-}
-
-.stars {
-    display: inline-flex;
-    gap: 1px;
-}
-
-.badge {
-    font-size: 0.75rem;
-}
-
-.table-hover tbody tr:hover {
-    background-color: rgba(255, 107, 157, 0.05);
-}
-
-.form-check-input:checked {
-    background-color: var(--primary-color);
-    border-color: var(--primary-color);
-}
-</style>
 @endsection

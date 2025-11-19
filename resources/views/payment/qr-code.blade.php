@@ -141,33 +141,6 @@
 <!-- Include QR Code JavaScript Library -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
-<style>
-.qr-code-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-#qrcode {
-    background: white;
-    padding: 20px;
-}
-
-#qrcode img {
-    display: block;
-    margin: 0 auto;
-}
-
-@media print {
-    .no-print {
-        display: none !important;
-    }
-    #qrcode {
-        padding: 10px !important;
-    }
-}
-</style>
-
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     var qrString = '{{ $qrString }}';

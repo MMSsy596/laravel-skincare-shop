@@ -15,336 +15,11 @@
         <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
         <!-- Styles -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
-        
-        <style>
-            :root {
-                --primary-color: #ff6b9d;
-                --secondary-color: #f8f9fa;
-                --accent-color: #ffd700;
-                --text-dark: #2c3e50;
-                --text-light: #6c757d;
-                --gradient-primary: linear-gradient(135deg, #ff6b9d 0%, #ff8fab 100%);
-                --gradient-secondary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                --shadow-soft: 0 10px 30px rgba(0,0,0,0.1);
-                --shadow-hover: 0 20px 40px rgba(0,0,0,0.15);
-            }
-
-            * {
-                font-family: 'Poppins', sans-serif;
-            }
-
-            .navbar-brand {
-                font-family: 'Playfair Display', serif;
-                font-weight: 700;
-                font-size: 1.8rem;
-                background: var(--gradient-primary);
-                -webkit-background-clip: text;
-                -webkit-text-fill-color: transparent;
-                background-clip: text;
-            }
-
-            .navbar {
-                background: rgba(255, 255, 255, 0.95) !important;
-                backdrop-filter: blur(10px);
-                box-shadow: var(--shadow-soft);
-                transition: all 0.3s ease;
-            }
-
-            .navbar-nav .nav-link {
-                font-weight: 500;
-                color: var(--text-dark) !important;
-                transition: all 0.3s ease;
-                position: relative;
-            }
-
-            .navbar-nav .nav-link:hover {
-                color: var(--primary-color) !important;
-                transform: translateY(-2px);
-            }
-
-            .navbar-nav .nav-link::after {
-                content: '';
-                position: absolute;
-                bottom: 0;
-                left: 50%;
-                width: 0;
-                height: 2px;
-                background: var(--gradient-primary);
-                transition: all 0.3s ease;
-                transform: translateX(-50%);
-            }
-
-            .navbar-nav .nav-link:hover::after {
-                width: 100%;
-            }
-
-            .dropdown-menu {
-                border: none;
-                box-shadow: var(--shadow-hover);
-                border-radius: 15px;
-                padding: 1rem 0;
-            }
-
-            .dropdown-item {
-                padding: 0.75rem 1.5rem;
-                transition: all 0.3s ease;
-            }
-
-            .dropdown-item:hover {
-                background: var(--gradient-primary);
-                color: white;
-                transform: translateX(5px);
-            }
-
-            .cart-badge {
-                position: absolute;
-                top: -8px;
-                right: -8px;
-                background: var(--gradient-primary);
-                color: white;
-                border-radius: 50%;
-                width: 22px;
-                height: 22px;
-                font-size: 12px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                font-weight: 600;
-                animation: pulse 2s infinite;
-            }
-
-            @keyframes pulse {
-                0% { transform: scale(1); }
-                50% { transform: scale(1.1); }
-                100% { transform: scale(1); }
-            }
-
-            .btn-primary {
-                background: var(--gradient-primary);
-                border: none;
-                border-radius: 25px;
-                padding: 0.75rem 2rem;
-                font-weight: 600;
-                transition: all 0.3s ease;
-                box-shadow: var(--shadow-soft);
-            }
-
-            .btn-primary:hover {
-                transform: translateY(-3px);
-                box-shadow: var(--shadow-hover);
-            }
-
-            .card {
-                border: none;
-                border-radius: 20px;
-                box-shadow: var(--shadow-soft);
-                transition: all 0.3s ease;
-                overflow: hidden;
-            }
-
-            .card:hover {
-                transform: translateY(-10px);
-                box-shadow: var(--shadow-hover);
-            }
-
-            .ai-chatbot {
-                position: fixed;
-                bottom: 30px;
-                right: 30px;
-                z-index: 1000;
-            }
-
-            .ai-chatbot-btn {
-                width: 60px;
-                height: 60px;
-                border-radius: 50%;
-                background: var(--gradient-primary);
-                border: none;
-                color: white;
-                font-size: 24px;
-                box-shadow: var(--shadow-hover);
-                transition: all 0.3s ease;
-                animation: float 3s ease-in-out infinite;
-            }
-
-            .ai-chatbot-btn:hover {
-                transform: scale(1.1);
-            }
-
-            @keyframes float {
-                0%, 100% { transform: translateY(0px); }
-                50% { transform: translateY(-10px); }
-            }
-
-            .ai-chat-window {
-                position: fixed;
-                bottom: 100px;
-                right: 30px;
-                width: 350px;
-                height: 500px;
-                background: white;
-                border-radius: 20px;
-                box-shadow: var(--shadow-hover);
-                display: none;
-                z-index: 1000;
-                overflow: hidden;
-            }
-
-            .ai-chat-header {
-                background: var(--gradient-primary);
-                color: white;
-                padding: 1rem;
-                text-align: center;
-                font-weight: 600;
-            }
-
-            .ai-chat-messages {
-                height: 350px;
-                overflow-y: auto;
-                padding: 1rem;
-            }
-
-            .ai-chat-input {
-                position: absolute;
-                bottom: 0;
-                left: 0;
-                right: 0;
-                padding: 1rem;
-                border-top: 1px solid #eee;
-                background: white;
-            }
-
-            .hero-section {
-                background: var(--gradient-secondary);
-                color: white;
-                padding: 4rem 0;
-                position: relative;
-                overflow: hidden;
-            }
-
-            .hero-section::before {
-                content: '';
-                position: absolute;
-                top: 0;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="white" opacity="0.1"/><circle cx="75" cy="75" r="1" fill="white" opacity="0.1"/><circle cx="50" cy="10" r="0.5" fill="white" opacity="0.1"/><circle cx="10" cy="60" r="0.5" fill="white" opacity="0.1"/><circle cx="90" cy="40" r="0.5" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
-            }
-
-            .footer {
-                background: var(--text-dark);
-                color: white;
-                padding: 3rem 0 1rem;
-            }
-
-            .footer h5 {
-                font-family: 'Playfair Display', serif;
-                color: var(--primary-color);
-            }
-
-            .social-links a {
-                color: white;
-                font-size: 1.5rem;
-                margin-right: 1rem;
-                transition: all 0.3s ease;
-            }
-
-            .social-links a:hover {
-                color: var(--primary-color);
-                transform: translateY(-3px);
-            }
-
-            .search-bar {
-                background: white;
-                border-radius: 25px;
-                padding: 0.5rem;
-                box-shadow: var(--shadow-soft);
-                border: 2px solid transparent;
-                transition: all 0.3s ease;
-            }
-
-            .search-bar:focus-within {
-                border-color: var(--primary-color);
-                box-shadow: var(--shadow-hover);
-            }
-
-            .search-input {
-                border: none;
-                outline: none;
-                padding: 0.5rem 1rem;
-                width: 100%;
-                border-radius: 20px;
-            }
-
-            .category-badge {
-                background: var(--gradient-primary);
-                color: white;
-                padding: 0.5rem 1rem;
-                border-radius: 20px;
-                font-size: 0.8rem;
-                font-weight: 600;
-                margin-bottom: 1rem;
-                display: inline-block;
-            }
-
-            .price-tag {
-                background: var(--gradient-secondary);
-                color: white;
-                padding: 0.5rem 1rem;
-                border-radius: 15px;
-                font-weight: 700;
-                font-size: 1.1rem;
-            }
-
-            .rating-stars {
-                color: var(--accent-color);
-            }
-
-            .product-card {
-                position: relative;
-                overflow: hidden;
-            }
-
-            .product-card::before {
-                content: '';
-                position: absolute;
-                top: 0;
-                left: -100%;
-                width: 100%;
-                height: 100%;
-                background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
-                transition: left 0.5s;
-            }
-
-            .product-card:hover::before {
-                left: 100%;
-            }
-
-            .ai-recommendation {
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                color: white;
-                padding: 1rem;
-                border-radius: 15px;
-                margin-bottom: 1rem;
-                position: relative;
-                overflow: hidden;
-            }
-
-            .ai-recommendation::before {
-                content: '🤖 AI';
-                position: absolute;
-                top: 0.5rem;
-                right: 1rem;
-                font-size: 0.8rem;
-                opacity: 0.7;
-            }
-        </style>
     </head>
 <body class="font-sans antialiased">
     <div class="min-vh-100 d-flex flex-column">
         <!-- Main Navigation -->
-        <nav class="navbar navbar-expand-lg fixed-top">
+        <nav class="navbar navbar-light navbar-expand-lg fixed-top theme-navbar">
             <div class="container">
                 <!-- Logo/Brand -->
                 <a class="navbar-brand" href="/">
@@ -488,7 +163,7 @@
         </nav>
 
         <!-- Page Content -->
-        <main class="flex-fill" style="margin-top: 80px;">
+        <main class="flex-fill">
             @if(session('success'))
                 <div class="alert alert-success alert-dismissible fade show" role="alert">
                     <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
@@ -517,15 +192,35 @@
                 </div>
                 <div class="ai-chat-messages" id="aiChatMessages">
                     <div class="text-center text-muted mt-3">
-                        <i class="fas fa-spa fa-2x mb-2"></i>
-                        <p>Xin chào! Tôi là BeautyAI, trợ lý tư vấn mỹ phẩm của bạn.</p>
-                        <p>Hãy hỏi tôi về sản phẩm phù hợp với làn da của bạn!</p>
+                        <i class="fas fa-spa fa-2x mb-2 text-primary"></i>
+                        <p class="fw-semibold">Xin chào! Tôi là BeautyAI, trợ lý tư vấn mỹ phẩm của bạn.</p>
+                        <p class="small">Hãy hỏi tôi về sản phẩm phù hợp với làn da của bạn!</p>
+                        
+                        <!-- Quick Action Buttons -->
+                        <div class="quick-actions mt-3 px-2">
+                            <button class="btn btn-sm btn-outline-primary mb-2 quick-action-btn" onclick="sendQuickMessage('Tư vấn cho da khô')">
+                                <i class="fas fa-tint me-1"></i>Da khô
+                            </button>
+                            <button class="btn btn-sm btn-outline-primary mb-2 quick-action-btn" onclick="sendQuickMessage('Tư vấn cho da dầu')">
+                                <i class="fas fa-oil-can me-1"></i>Da dầu
+                            </button>
+                            <button class="btn btn-sm btn-outline-primary mb-2 quick-action-btn" onclick="sendQuickMessage('Tư vấn cho da nhạy cảm')">
+                                <i class="fas fa-heart me-1"></i>Da nhạy cảm
+                            </button>
+                            <button class="btn btn-sm btn-outline-primary mb-2 quick-action-btn" onclick="sendQuickMessage('Sản phẩm nào còn hàng?')">
+                                <i class="fas fa-box me-1"></i>Kiểm tra tồn kho
+                            </button>
+                            <button class="btn btn-sm btn-outline-primary mb-2 quick-action-btn" onclick="sendQuickMessage('Gợi ý sản phẩm nổi bật')">
+                                <i class="fas fa-star me-1"></i>Sản phẩm nổi bật
+                            </button>
+                        </div>
                     </div>
                 </div>
                 <div class="ai-chat-input">
                     <div class="input-group">
-                        <input type="text" class="form-control" id="aiChatInput" placeholder="Nhập câu hỏi...">
-                        <button class="btn btn-primary" onclick="sendMessage()">
+                        <input type="text" class="form-control" id="aiChatInput" placeholder="Nhập câu hỏi..." 
+                               onkeypress="if(event.key === 'Enter') sendMessage()">
+                        <button class="btn btn-primary" onclick="sendMessage()" id="sendMessageBtn">
                             <i class="fas fa-paper-plane"></i>
                         </button>
                     </div>
@@ -593,6 +288,20 @@
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
     
     <script>
+        const setNavbarOffset = () => {
+            const navbar = document.querySelector('.navbar');
+            if (!navbar) {
+                return;
+            }
+            const height = navbar.offsetHeight;
+            document.documentElement.style.setProperty('--navbar-height', `${height}px`);
+        };
+
+        window.addEventListener('load', setNavbarOffset);
+        window.addEventListener('resize', setNavbarOffset);
+        document.addEventListener('shown.bs.collapse', setNavbarOffset);
+        document.addEventListener('hidden.bs.collapse', setNavbarOffset);
+
         // Initialize AOS
         AOS.init();
 
@@ -602,6 +311,12 @@
             chatWindow.style.display = chatWindow.style.display === 'block' ? 'none' : 'block';
         }
 
+        function sendQuickMessage(message) {
+            const input = document.getElementById('aiChatInput');
+            input.value = message;
+            sendMessage();
+        }
+
         function sendMessage() {
             const input = document.getElementById('aiChatInput');
             const message = input.value.trim();
@@ -609,9 +324,23 @@
                 addMessage('user', message);
                 input.value = '';
                 
+                // Disable send button while processing
+                const sendBtn = document.getElementById('sendMessageBtn');
+                if (sendBtn) {
+                    sendBtn.disabled = true;
+                    sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+                }
+                
+                // Hide quick actions after first message
+                const quickActions = document.querySelector('.quick-actions');
+                if (quickActions) {
+                    quickActions.style.display = 'none';
+                }
+                
                 // Show typing indicator
                 const typingDiv = document.createElement('div');
                 typingDiv.className = 'mb-3';
+                typingDiv.id = 'typingIndicator';
                 typingDiv.innerHTML = `
                     <div class="d-inline-block p-3 rounded-3 bg-light text-dark">
                         <i class="fas fa-robot me-2"></i>AI đang phân tích...
@@ -622,12 +351,28 @@
                 // Call AI API
                 fetchAIResponse(message).then(response => {
                     // Remove typing indicator
-                    document.getElementById('aiChatMessages').removeChild(typingDiv);
+                    const typing = document.getElementById('typingIndicator');
+                    if (typing) typing.remove();
+                    
                     addMessage('ai', response);
+                    
+                    // Re-enable send button
+                    if (sendBtn) {
+                        sendBtn.disabled = false;
+                        sendBtn.innerHTML = '<i class="fas fa-paper-plane"></i>';
+                    }
                 }).catch(error => {
                     // Remove typing indicator
-                    document.getElementById('aiChatMessages').removeChild(typingDiv);
+                    const typing = document.getElementById('typingIndicator');
+                    if (typing) typing.remove();
+                    
                     addMessage('ai', 'Xin lỗi, tôi đang gặp sự cố. Vui lòng thử lại sau.');
+                    
+                    // Re-enable send button
+                    if (sendBtn) {
+                        sendBtn.disabled = false;
+                        sendBtn.innerHTML = '<i class="fas fa-paper-plane"></i>';
+                    }
                 });
             }
         }
@@ -657,20 +402,35 @@
                 // Extract product name from message
                 const productName = extractProductName(message);
                 if (productName) {
-                    const response = await fetch(`/ai/stock-check?product_name=${encodeURIComponent(productName)}`);
+                    const response = await fetch(`/ai/stock-check?product_name=${encodeURIComponent(productName)}`, {
+                        method: 'GET',
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    });
                     const data = await response.json();
                     
-                    if (data.success) {
-                        return `📦 **${data.stock_info.product_name}**\n\n` +
-                               `Tình trạng: ${data.stock_info.status}\n` +
-                               `Số lượng: ${data.stock_info.current_stock} sản phẩm\n\n` +
+                    if (data.success && data.stock_info) {
+                        let responseText = `📦 <strong>${data.stock_info.product_name}</strong><br><br>` +
+                               `Tình trạng: <span class="badge bg-${data.stock_info.is_available ? 'success' : 'warning'}">${data.stock_info.status}</span><br>` +
+                               `Số lượng: <strong>${data.stock_info.current_stock}</strong> sản phẩm<br><br>` +
                                `${data.stock_info.recommendation}`;
+                        
+                        if (data.stock_info.product_url) {
+                            responseText += `<br><br><a href="${data.stock_info.product_url}" class="btn btn-sm btn-primary mt-2" target="_blank">Xem chi tiết sản phẩm <i class="fas fa-external-link-alt ms-1"></i></a>`;
+                        }
+                        
+                        return responseText;
+                    } else if (data.message) {
+                        return data.message + (data.suggestion ? '<br>' + data.suggestion : '');
                     }
                 }
                 
-                return 'Để kiểm tra tình trạng hàng chính xác, bạn có thể:\n1. Xem trực tiếp trên trang sản phẩm\n2. Liên hệ hotline: 1900-xxxx\n3. Chat với chúng tôi để được tư vấn cụ thể';
+                return 'Để kiểm tra tình trạng hàng chính xác, bạn có thể:<br>1. Xem trực tiếp trên <a href="/shop" target="_blank">trang Shop</a><br>2. Tìm kiếm sản phẩm cụ thể<br>3. Chat với chúng tôi để được tư vấn';
             } catch (error) {
-                return 'Để kiểm tra tình trạng hàng, vui lòng xem trực tiếp trên trang sản phẩm hoặc liên hệ chúng tôi.';
+                console.error('Error checking stock:', error);
+                return 'Để kiểm tra tình trạng hàng, vui lòng xem trực tiếp trên <a href="/shop" target="_blank">trang Shop</a> hoặc liên hệ chúng tôi.';
             }
         }
 
@@ -679,37 +439,46 @@
                 // Extract skin type from message
                 const skinType = extractSkinType(message);
                 if (skinType) {
-                    const response = await fetch(`/ai/skin-analysis?skin_type=${skinType}`);
+                    const response = await fetch(`/ai/skin-analysis?skin_type=${skinType}`, {
+                        method: 'GET',
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    });
                     const data = await response.json();
                     
-                    if (data.success) {
+                    if (data.success && data.analysis) {
                         const analysis = data.analysis;
-                        let response = `🎯 **Tư vấn cho da ${analysis.skin_type}**\n\n`;
+                        let responseText = `🎯 <strong>Tư vấn cho da ${skinType}</strong><br><br>`;
                         
                         if (analysis.recommendations) {
-                            response += `**Thành phần nên dùng:**\n`;
+                            responseText += `<strong>Thành phần nên dùng:</strong><br>`;
                             analysis.recommendations.ingredients.forEach(ingredient => {
-                                response += `• ${ingredient}\n`;
+                                responseText += `• ${ingredient}<br>`;
                             });
-                            response += `\n**Thành phần nên tránh:**\n`;
+                            responseText += `<br><strong>Thành phần nên tránh:</strong><br>`;
                             analysis.recommendations.avoid.forEach(item => {
-                                response += `• ${item}\n`;
+                                responseText += `• ${item}<br>`;
                             });
                         }
                         
                         if (analysis.products && analysis.products.length > 0) {
-                            response += `\n**Sản phẩm phù hợp:**\n`;
+                            responseText += `<br><strong>Sản phẩm phù hợp:</strong><br>`;
                             analysis.products.slice(0, 3).forEach(product => {
-                                response += `• ${product.name} - ${product.formatted_price}\n`;
+                                const productUrl = `/product/${product.id}`;
+                                responseText += `• <a href="${productUrl}" target="_blank">${product.name}</a> - ${product.formatted_price || product.price}<br>`;
                             });
+                            responseText += `<br><a href="/shop" class="btn btn-sm btn-primary" target="_blank">Xem tất cả sản phẩm <i class="fas fa-external-link-alt ms-1"></i></a>`;
                         }
                         
-                        return response;
+                        return responseText;
                     }
                 }
                 
                 return generateAIResponse(message);
             } catch (error) {
+                console.error('Error getting skin recommendations:', error);
                 return generateAIResponse(message);
             }
         }
@@ -776,7 +545,14 @@
                     : 'bg-light text-dark'
             }`;
             messageBubble.style.maxWidth = '80%';
-            messageBubble.textContent = message;
+            messageBubble.style.wordWrap = 'break-word';
+            
+            // Allow HTML content for links and formatting
+            if (type === 'user') {
+                messageBubble.textContent = message;
+            } else {
+                messageBubble.innerHTML = message;
+            }
             
             messageDiv.appendChild(messageBubble);
             messagesContainer.appendChild(messageDiv);
@@ -784,32 +560,33 @@
         }
 
         function generateAIResponse(message) {
+            const lowerMessage = message.toLowerCase();
             const responses = {
-                'da khô': 'Với làn da khô, tôi khuyên bạn nên sử dụng kem dưỡng ẩm có chứa Hyaluronic Acid và Ceramides. Sản phẩm phù hợp: Kem dưỡng ẩm chuyên sâu.',
-                'da dầu': 'Làn da dầu cần sản phẩm kiểm soát bã nhờn. Tôi gợi ý: Sữa rửa mặt gel và kem dưỡng ẩm không gây nhờn.',
-                'da nhạy cảm': 'Da nhạy cảm cần sản phẩm dịu nhẹ. Hãy thử: Sữa rửa mặt dành cho da nhạy cảm và kem dưỡng ẩm phục hồi.',
-                'mụn': 'Để trị mụn hiệu quả, tôi khuyên: Sản phẩm chứa Salicylic Acid hoặc Benzoyl Peroxide.',
-                'chống lão hóa': 'Sản phẩm chống lão hóa tốt nhất: Serum Vitamin C, Retinol và kem chống nắng SPF 50+.',
-                'trang điểm': 'Để trang điểm đẹp tự nhiên: Kem nền phù hợp với tone da, phấn phủ và son môi.',
-                'tẩy trang': 'Tẩy trang hiệu quả: Dầu tẩy trang hoặc nước tẩy trang dịu nhẹ.',
-                'còn hàng': 'Để kiểm tra tình trạng hàng, bạn có thể xem trực tiếp trên trang sản phẩm hoặc liên hệ với chúng tôi qua hotline.',
-                'giá': 'Giá sản phẩm được hiển thị trên từng trang sản phẩm. Bạn có thể so sánh giá và chọn sản phẩm phù hợp với ngân sách.',
-                'giao hàng': 'Chúng tôi giao hàng toàn quốc với thời gian 2-5 ngày làm việc. Miễn phí ship cho đơn hàng từ 500k.',
+                'da khô': 'Với làn da khô, tôi khuyên bạn nên sử dụng kem dưỡng ẩm có chứa Hyaluronic Acid và Ceramides. Sản phẩm phù hợp: Kem dưỡng ẩm chuyên sâu.<br><br><a href="/shop" class="btn btn-sm btn-primary mt-2" target="_blank">Xem sản phẩm cho da khô <i class="fas fa-external-link-alt ms-1"></i></a>',
+                'da dầu': 'Làn da dầu cần sản phẩm kiểm soát bã nhờn. Tôi gợi ý: Sữa rửa mặt gel và kem dưỡng ẩm không gây nhờn.<br><br><a href="/shop" class="btn btn-sm btn-primary mt-2" target="_blank">Xem sản phẩm cho da dầu <i class="fas fa-external-link-alt ms-1"></i></a>',
+                'da nhạy cảm': 'Da nhạy cảm cần sản phẩm dịu nhẹ. Hãy thử: Sữa rửa mặt dành cho da nhạy cảm và kem dưỡng ẩm phục hồi.<br><br><a href="/shop" class="btn btn-sm btn-primary mt-2" target="_blank">Xem sản phẩm cho da nhạy cảm <i class="fas fa-external-link-alt ms-1"></i></a>',
+                'mụn': 'Để trị mụn hiệu quả, tôi khuyên: Sản phẩm chứa Salicylic Acid hoặc Benzoyl Peroxide.<br><br><a href="/shop" class="btn btn-sm btn-primary mt-2" target="_blank">Xem sản phẩm trị mụn <i class="fas fa-external-link-alt ms-1"></i></a>',
+                'chống lão hóa': 'Sản phẩm chống lão hóa tốt nhất: Serum Vitamin C, Retinol và kem chống nắng SPF 50+.<br><br><a href="/shop" class="btn btn-sm btn-primary mt-2" target="_blank">Xem sản phẩm chống lão hóa <i class="fas fa-external-link-alt ms-1"></i></a>',
+                'trang điểm': 'Để trang điểm đẹp tự nhiên: Kem nền phù hợp với tone da, phấn phủ và son môi.<br><br><a href="/shop" class="btn btn-sm btn-primary mt-2" target="_blank">Xem sản phẩm trang điểm <i class="fas fa-external-link-alt ms-1"></i></a>',
+                'tẩy trang': 'Tẩy trang hiệu quả: Dầu tẩy trang hoặc nước tẩy trang dịu nhẹ.<br><br><a href="/shop" class="btn btn-sm btn-primary mt-2" target="_blank">Xem sản phẩm tẩy trang <i class="fas fa-external-link-alt ms-1"></i></a>',
+                'còn hàng': 'Để kiểm tra tình trạng hàng, bạn có thể xem trực tiếp trên <a href="/shop" target="_blank">trang Shop</a> hoặc liên hệ với chúng tôi qua hotline.',
+                'giá': 'Giá sản phẩm được hiển thị trên từng trang sản phẩm. Bạn có thể so sánh giá và chọn sản phẩm phù hợp với ngân sách.<br><br><a href="/shop" class="btn btn-sm btn-primary mt-2" target="_blank">Xem tất cả sản phẩm <i class="fas fa-external-link-alt ms-1"></i></a>',
+                'giao hàng': 'Chúng tôi giao hàng toàn quốc với thời gian 2-5 ngày làm việc. Miễn phí ship cho đơn hàng từ 500k. Phí ship: 3,000 VNĐ/km, tối thiểu 10,000 VNĐ.',
                 'đổi trả': 'Chính sách đổi trả trong 30 ngày nếu sản phẩm có vấn đề về chất lượng.',
                 'thành phần': 'Thành phần được liệt kê chi tiết trên trang sản phẩm. Bạn có thể xem để kiểm tra phù hợp với làn da.',
                 'hướng dẫn': 'Hướng dẫn sử dụng được cung cấp trên bao bì và trang sản phẩm. Nếu cần tư vấn thêm, hãy liên hệ chúng tôi.',
-                'serum': 'Serum là sản phẩm chăm sóc da cô đặc. Tùy theo nhu cầu: Vitamin C (làm sáng), Hyaluronic Acid (dưỡng ẩm), Retinol (chống lão hóa).',
-                'kem dưỡng': 'Kem dưỡng ẩm nên chọn theo loại da: Da khô (dưỡng ẩm sâu), Da dầu (không gây nhờn), Da hỗn hợp (cân bằng).',
-                'sữa rửa mặt': 'Sữa rửa mặt phù hợp: Da khô (dạng kem), Da dầu (dạng gel), Da nhạy cảm (không chứa hương liệu).',
-                'mặt nạ': 'Mặt nạ nên dùng 2-3 lần/tuần. Loại phù hợp: Dưỡng ẩm, Làm sáng, Se khít lỗ chân lông.',
-                'chống nắng': 'Kem chống nắng SPF 30-50, thoa lại sau 2-3 giờ khi hoạt động ngoài trời.',
-                'tẩy tế bào chết': 'Tẩy tế bào chết 1-2 lần/tuần. Chọn loại dịu nhẹ cho da nhạy cảm.',
-                'xịt khoáng': 'Xịt khoáng giúp cấp ẩm tức thì, có thể dùng nhiều lần trong ngày.',
-                'tinh chất': 'Tinh chất chứa hoạt chất cô đặc, thường dùng trước kem dưỡng.',
-                'phấn phủ': 'Phấn phủ giúp kiềm dầu và định hình lớp trang điểm.',
-                'son môi': 'Son môi nên chọn theo tone da và sự kiện. Có thể dưỡng môi trước khi thoa.',
-                'phấn mắt': 'Phấn mắt có nhiều màu sắc, phù hợp với từng dịp và trang phục.',
-                'mascara': 'Mascara giúp làm dài và dày lông mi. Chọn loại không lem và dễ tẩy.',
+                'serum': 'Serum là sản phẩm chăm sóc da cô đặc. Tùy theo nhu cầu: Vitamin C (làm sáng), Hyaluronic Acid (dưỡng ẩm), Retinol (chống lão hóa).<br><br><a href="/shop" class="btn btn-sm btn-primary mt-2" target="_blank">Xem serum <i class="fas fa-external-link-alt ms-1"></i></a>',
+                'kem dưỡng': 'Kem dưỡng ẩm nên chọn theo loại da: Da khô (dưỡng ẩm sâu), Da dầu (không gây nhờn), Da hỗn hợp (cân bằng).<br><br><a href="/shop" class="btn btn-sm btn-primary mt-2" target="_blank">Xem kem dưỡng <i class="fas fa-external-link-alt ms-1"></i></a>',
+                'sữa rửa mặt': 'Sữa rửa mặt phù hợp: Da khô (dạng kem), Da dầu (dạng gel), Da nhạy cảm (không chứa hương liệu).<br><br><a href="/shop" class="btn btn-sm btn-primary mt-2" target="_blank">Xem sữa rửa mặt <i class="fas fa-external-link-alt ms-1"></i></a>',
+                'mặt nạ': 'Mặt nạ nên dùng 2-3 lần/tuần. Loại phù hợp: Dưỡng ẩm, Làm sáng, Se khít lỗ chân lông.<br><br><a href="/shop" class="btn btn-sm btn-primary mt-2" target="_blank">Xem mặt nạ <i class="fas fa-external-link-alt ms-1"></i></a>',
+                'chống nắng': 'Kem chống nắng SPF 30-50, thoa lại sau 2-3 giờ khi hoạt động ngoài trời.<br><br><a href="/shop" class="btn btn-sm btn-primary mt-2" target="_blank">Xem kem chống nắng <i class="fas fa-external-link-alt ms-1"></i></a>',
+                'tẩy tế bào chết': 'Tẩy tế bào chết 1-2 lần/tuần. Chọn loại dịu nhẹ cho da nhạy cảm.<br><br><a href="/shop" class="btn btn-sm btn-primary mt-2" target="_blank">Xem sản phẩm tẩy tế bào chết <i class="fas fa-external-link-alt ms-1"></i></a>',
+                'xịt khoáng': 'Xịt khoáng giúp cấp ẩm tức thì, có thể dùng nhiều lần trong ngày.<br><br><a href="/shop" class="btn btn-sm btn-primary mt-2" target="_blank">Xem xịt khoáng <i class="fas fa-external-link-alt ms-1"></i></a>',
+                'tinh chất': 'Tinh chất chứa hoạt chất cô đặc, thường dùng trước kem dưỡng.<br><br><a href="/shop" class="btn btn-sm btn-primary mt-2" target="_blank">Xem tinh chất <i class="fas fa-external-link-alt ms-1"></i></a>',
+                'phấn phủ': 'Phấn phủ giúp kiềm dầu và định hình lớp trang điểm.<br><br><a href="/shop" class="btn btn-sm btn-primary mt-2" target="_blank">Xem phấn phủ <i class="fas fa-external-link-alt ms-1"></i></a>',
+                'son môi': 'Son môi nên chọn theo tone da và sự kiện. Có thể dưỡng môi trước khi thoa.<br><br><a href="/shop" class="btn btn-sm btn-primary mt-2" target="_blank">Xem son môi <i class="fas fa-external-link-alt ms-1"></i></a>',
+                'phấn mắt': 'Phấn mắt có nhiều màu sắc, phù hợp với từng dịp và trang phục.<br><br><a href="/shop" class="btn btn-sm btn-primary mt-2" target="_blank">Xem phấn mắt <i class="fas fa-external-link-alt ms-1"></i></a>',
+                'mascara': 'Mascara giúp làm dài và dày lông mi. Chọn loại không lem và dễ tẩy.<br><br><a href="/shop" class="btn btn-sm btn-primary mt-2" target="_blank">Xem mascara <i class="fas fa-external-link-alt ms-1"></i></a>',
                 'nước hoa': 'Nước hoa có nhiều mùi hương khác nhau. Nên thử trước khi mua.',
                 'dầu gội': 'Dầu gội nên chọn theo loại tóc: Khô, Dầu, Hỗn hợp, Nhuộm.',
                 'dầu xả': 'Dầu xả giúp mềm mượt tóc, thoa từ giữa thân tóc đến ngọn.',
@@ -828,21 +605,21 @@
 
             // Check for product availability
             if (lowerMessage.includes('còn') && (lowerMessage.includes('hàng') || lowerMessage.includes('không'))) {
-                return 'Để kiểm tra tình trạng hàng chính xác, bạn có thể:\n1. Xem trực tiếp trên trang sản phẩm\n2. Liên hệ hotline: 1900-xxxx\n3. Chat với chúng tôi để được tư vấn cụ thể';
+                return 'Để kiểm tra tình trạng hàng chính xác, bạn có thể:<br>1. Xem trực tiếp trên <a href="/shop" target="_blank">trang Shop</a><br>2. Tìm kiếm sản phẩm cụ thể<br>3. Chat với chúng tôi để được tư vấn cụ thể';
             }
 
             // Check for skin type recommendations
             if (lowerMessage.includes('da') && lowerMessage.includes('nên')) {
-                return 'Dựa trên loại da của bạn, tôi gợi ý:\n- Da khô: Kem dưỡng ẩm sâu, Serum Hyaluronic Acid\n- Da dầu: Sữa rửa mặt gel, Kem dưỡng không gây nhờn\n- Da hỗn hợp: Sản phẩm cân bằng\n- Da nhạy cảm: Sản phẩm dịu nhẹ, không hương liệu';
+                return 'Dựa trên loại da của bạn, tôi gợi ý:<br>- Da khô: Kem dưỡng ẩm sâu, Serum Hyaluronic Acid<br>- Da dầu: Sữa rửa mặt gel, Kem dưỡng không gây nhờn<br>- Da hỗn hợp: Sản phẩm cân bằng<br>- Da nhạy cảm: Sản phẩm dịu nhẹ, không hương liệu<br><br><a href="/shop" class="btn btn-sm btn-primary mt-2" target="_blank">Xem tất cả sản phẩm <i class="fas fa-external-link-alt ms-1"></i></a>';
             }
 
             // Check for price inquiries
             if (lowerMessage.includes('giá') || lowerMessage.includes('bao nhiêu')) {
-                return 'Giá sản phẩm được hiển thị rõ ràng trên từng trang sản phẩm. Bạn có thể:\n1. Xem giá trực tiếp trên website\n2. So sánh giá giữa các sản phẩm\n3. Liên hệ để được tư vấn về sản phẩm phù hợp ngân sách';
+                return 'Giá sản phẩm được hiển thị rõ ràng trên từng trang sản phẩm. Bạn có thể:<br>1. Xem giá trực tiếp trên <a href="/shop" target="_blank">trang Shop</a><br>2. So sánh giá giữa các sản phẩm<br>3. Liên hệ để được tư vấn về sản phẩm phù hợp ngân sách';
             }
 
             // Default response with suggestions
-            return 'Cảm ơn bạn đã hỏi! Tôi có thể tư vấn về:\n\n🔍 **Tìm kiếm sản phẩm:**\n- "còn hàng không", "giá bao nhiêu"\n\n👩‍⚕️ **Tư vấn da:**\n- "da khô", "da dầu", "da nhạy cảm"\n- "mụn", "chống lão hóa", "dưỡng ẩm"\n\n💄 **Sản phẩm cụ thể:**\n- "serum", "kem dưỡng", "sữa rửa mặt"\n- "trang điểm", "nước hoa", "chăm sóc tóc"\n\n🚚 **Dịch vụ:**\n- "giao hàng", "đổi trả", "hướng dẫn"\n\nBạn quan tâm đến vấn đề gì?';
+            return 'Cảm ơn bạn đã hỏi! Tôi có thể tư vấn về:<br><br><strong>🔍 Tìm kiếm sản phẩm:</strong><br>- "còn hàng không", "giá bao nhiêu"<br><br><strong>👩‍⚕️ Tư vấn da:</strong><br>- "da khô", "da dầu", "da nhạy cảm"<br>- "mụn", "chống lão hóa", "dưỡng ẩm"<br><br><strong>💄 Sản phẩm cụ thể:</strong><br>- "serum", "kem dưỡng", "sữa rửa mặt"<br>- "trang điểm", "nước hoa", "chăm sóc tóc"<br><br><strong>🚚 Dịch vụ:</strong><br>- "giao hàng", "đổi trả", "hướng dẫn"<br><br>Bạn quan tâm đến vấn đề gì?<br><br><a href="/shop" class="btn btn-sm btn-primary mt-2" target="_blank">Xem tất cả sản phẩm <i class="fas fa-external-link-alt ms-1"></i></a>';
         }
 
         // Enter key to send message
