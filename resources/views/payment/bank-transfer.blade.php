@@ -40,7 +40,7 @@
                                     <div class="mb-3">
                                         <strong>Số tài khoản:</strong> 
                                         <span class="text-primary fw-bold">{{ $bankInfo['account_number'] }}</span>
-                                        <button class="btn btn-sm btn-outline-primary ms-2" onclick="copyToClipboard('{{ $bankInfo['account_number'] }}')">
+                                        <button class="btn btn-sm btn-outline-primary ms-2" onclick="copyToClipboard(event, '{{ $bankInfo['account_number'] }}')">
                                             <i class="fas fa-copy"></i>
                                         </button>
                                     </div>
@@ -53,7 +53,7 @@
                                     <div class="mb-3">
                                         <strong>Nội dung chuyển khoản:</strong><br>
                                         <span class="text-danger fw-bold">{{ $bankInfo['transfer_content'] }}</span>
-                                        <button class="btn btn-sm btn-outline-danger ms-2" onclick="copyToClipboard('{{ $bankInfo['transfer_content'] }}')">
+                                        <button class="btn btn-sm btn-outline-danger ms-2" onclick="copyToClipboard(event, '{{ $bankInfo['transfer_content'] }}')">
                                             <i class="fas fa-copy"></i>
                                         </button>
                                     </div>
@@ -116,11 +116,13 @@
 </div>
 
 <script>
-function copyToClipboard(text) {
+function copyToClipboard(e, text) {
     navigator.clipboard.writeText(text).then(function() {
         // Hiển thị thông báo copy thành công
-        const button = event.target.closest('button');
+        const button = e && e.target ? e.target.closest('button') : null;
         const originalHTML = button.innerHTML;
+        const hadPrimary = button.classList.contains('btn-outline-primary');
+        const hadDanger = button.classList.contains('btn-outline-danger');
         button.innerHTML = '<i class="fas fa-check"></i>';
         button.classList.remove('btn-outline-primary', 'btn-outline-danger');
         button.classList.add('btn-success');
@@ -128,13 +130,10 @@ function copyToClipboard(text) {
         setTimeout(() => {
             button.innerHTML = originalHTML;
             button.classList.remove('btn-success');
-            if (originalHTML.includes('btn-outline-primary')) {
-                button.classList.add('btn-outline-primary');
-            } else {
-                button.classList.add('btn-outline-danger');
-            }
+            if (hadPrimary) button.classList.add('btn-outline-primary');
+            if (hadDanger) button.classList.add('btn-outline-danger');
         }, 1000);
     });
 }
 </script>
-@endsection 
+@endsection

@@ -14,7 +14,9 @@ class ProductController extends Controller
      */
     public function index(Request $request)
     {
-        $query = \App\Models\Product::with('reviews');
+        $query = \App\Models\Product::with('reviews')
+            ->withAvg('reviews', 'rating')
+            ->withCount('reviews');
 
         // Search functionality
         if ($request->filled('search')) {
@@ -63,7 +65,14 @@ class ProductController extends Controller
 
         $products = $query->paginate(15);
 
-        return view('admin.products.index', compact('products'));
+        $stats = [
+            'total' => \App\Models\Product::count(),
+            'active' => \App\Models\Product::where('is_active', true)->count(),
+            'featured' => \App\Models\Product::where('is_featured', true)->count(),
+            'low_stock' => \App\Models\Product::where('stock', '<=', 10)->where('stock', '>', 0)->count(),
+        ];
+
+        return view('admin.products.index', compact('products', 'stats'));
     }
 
     /**
@@ -201,5 +210,27 @@ class ProductController extends Controller
         $product = \App\Models\Product::findOrFail($id);
         $product->delete();
         return redirect()->route('admin.products.index')->with('success', 'Xóa sản phẩm thành công!');
+    }
+
+    public function bulkActivate(Request $request)
+    {
+        $data = $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'integer|exists:products,id'
+        ]);
+
+        $updated = \App\Models\Product::whereIn('id', $data['ids'])
+            ->update(['is_active' => true]);
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'updated' => $updated,
+                'message' => 'Đã kích hoạt sản phẩm đã chọn'
+            ]);
+        }
+
+        return redirect()->route('admin.products.index')
+            ->with('success', 'Đã kích hoạt sản phẩm đã chọn');
     }
 }

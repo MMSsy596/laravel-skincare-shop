@@ -6,10 +6,400 @@ use Illuminate\Http\Request;
 use App\Models\Product;
 use App\Models\Order;
 use App\Models\Review;
+use App\Models\ChatMessage;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class AIController extends Controller
 {
+    public function chat()
+    {
+        // Get chat history from database
+        $chatHistory = $this->getChatHistory();
+        $lastMode = $this->getLastChatMode();
+        
+        return view('ai.chat', [
+            'chatHistory' => $chatHistory,
+            'lastMode' => $lastMode
+        ]);
+    }
+
+    /**
+     * Get chat history from database
+     */
+    private function getChatHistory()
+    {
+        $userId = auth()->id();
+        $sessionId = ChatMessage::getSessionId();
+        
+        $query = ChatMessage::orderBy('created_at', 'asc');
+        
+        if ($userId) {
+            $query->where('user_id', $userId);
+        } else {
+            $query->where('session_id', $sessionId);
+        }
+        
+        return $query->get()->map(function($msg) {
+            return [
+                'type' => $msg->type,
+                'content' => $msg->message,
+                'timestamp' => $msg->created_at->toISOString(),
+                'mode' => $msg->mode
+            ];
+        });
+    }
+
+    /**
+     * Get last chat mode used
+     */
+    private function getLastChatMode()
+    {
+        $userId = auth()->id();
+        $sessionId = ChatMessage::getSessionId();
+        
+        $query = ChatMessage::orderBy('created_at', 'desc');
+        
+        if ($userId) {
+            $query->where('user_id', $userId);
+        } else {
+            $query->where('session_id', $sessionId);
+        }
+        
+        $lastMessage = $query->first();
+        return $lastMessage ? $lastMessage->mode : 'standard';
+    }
+
+    /**
+     * Save message to database
+     */
+    private function saveMessage($type, $message, $mode = 'standard')
+    {
+        $userId = auth()->id();
+        $sessionId = ChatMessage::getSessionId();
+        
+        return ChatMessage::create([
+            'user_id' => $userId,
+            'session_id' => $sessionId,
+            'type' => $type,
+            'message' => $message,
+            'mode' => $mode,
+        ]);
+    }
+
+    /**
+     * Get chat history for API
+     */
+    public function getChatHistoryApi()
+    {
+        $history = $this->getChatHistory();
+        $lastMode = $this->getLastChatMode();
+        
+        return response()->json([
+            'success' => true,
+            'history' => $history,
+            'lastMode' => $lastMode
+        ]);
+    }
+
+    /**
+     * Clear chat history
+     */
+    public function clearChatHistory()
+    {
+        $userId = auth()->id();
+        $sessionId = ChatMessage::getSessionId();
+        
+        $query = ChatMessage::query();
+        
+        if ($userId) {
+            $query->where('user_id', $userId);
+        } else {
+            $query->where('session_id', $sessionId);
+        }
+        
+        $query->delete();
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Đã xóa lịch sử chat'
+        ]);
+    }
+
+    public function chatWithGemini(Request $request)
+    {
+        $request->validate([
+            'message' => 'required|string|max:2000',
+            'mode' => 'required|string|in:standard,gemini',
+        ]);
+
+        $apiKey = config('services.gemini.api_key');
+        $mode = $request->input('mode', 'gemini');
+        $message = $request->input('message');
+        
+        // Save user message to database
+        $this->saveMessage('user', $message, $mode);
+        
+        if (!$apiKey) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gemini API key chưa được cấu hình'
+            ], 500);
+        }
+
+        try {
+            // Get chat history from database
+            $history = $this->getChatHistory();
+            
+            // Build conversation history for Gemini (last 10 messages)
+            $contents = [];
+            $recentHistory = array_slice($history->toArray(), -10);
+            
+            foreach ($recentHistory as $msg) {
+                $role = $msg['type'] === 'user' ? 'user' : 'model';
+                $contents[] = [
+                    'role' => $role,
+                    'parts' => [['text' => strip_tags($msg['content'])]]
+                ];
+            }
+            
+            // Add current message
+            $contents[] = [
+                'role' => 'user',
+                'parts' => [['text' => $message]]
+            ];
+
+            // System instruction for beauty/skincare context
+            $systemInstruction = "Bạn là BeautyAI, một trợ lý tư vấn mỹ phẩm và chăm sóc da chuyên nghiệp, thân thiện và nhiệt tình. 
+            Nhiệm vụ của bạn là tư vấn về:
+            - Các sản phẩm mỹ phẩm phù hợp với từng loại da
+            - Chăm sóc da hàng ngày
+            - Thành phần mỹ phẩm và công dụng
+            - Quy trình skincare
+            - Trang điểm và làm đẹp
+            - Dịch vụ giao hàng, đổi trả
+            
+            Khi người dùng chào hỏi (hi, hello, xin chào, chào bạn), hãy chào lại một cách thân thiện và giới thiệu ngắn gọn về khả năng của bạn.
+            Hãy trả lời một cách thân thiện, chuyên nghiệp và hữu ích. 
+            Nếu được hỏi về sản phẩm cụ thể, hãy đề xuất các sản phẩm phù hợp.
+            Luôn trả lời bằng tiếng Việt với giọng điệu thân thiện, gần gũi.";
+
+            $response = Http::timeout(30)->post("https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key={$apiKey}", [
+                'contents' => $contents,
+                'systemInstruction' => [
+                    'parts' => [['text' => $systemInstruction]]
+                ],
+                'generationConfig' => [
+                    'temperature' => 0.7,
+                    'topK' => 40,
+                    'topP' => 0.95,
+                    'maxOutputTokens' => 1024,
+                ]
+            ]);
+
+            if ($response->successful()) {
+                $data = $response->json();
+                
+                if (isset($data['candidates'][0]['content']['parts'][0]['text'])) {
+                    $aiResponse = $data['candidates'][0]['content']['parts'][0]['text'];
+                    
+                    // Convert markdown-like formatting to HTML
+                    $aiResponse = nl2br($aiResponse);
+                    $aiResponse = preg_replace('/\*\*(.*?)\*\*/', '<strong>$1</strong>', $aiResponse);
+                    $aiResponse = preg_replace('/\*(.*?)\*/', '<em>$1</em>', $aiResponse);
+                    
+                    // Save AI response to database
+                    $this->saveMessage('ai', $aiResponse, $mode);
+                    
+                    return response()->json([
+                        'success' => true,
+                        'message' => $aiResponse
+                    ]);
+                }
+            }
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Không thể nhận phản hồi từ AI. Vui lòng thử lại sau.'
+            ], 500);
+
+        } catch (\Exception $e) {
+            Log::error('Gemini API Error: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Có lỗi xảy ra khi kết nối với AI. Vui lòng thử lại sau.'
+            ], 500);
+        }
+    }
+
+    /**
+     * Handle standard mode chat
+     */
+    public function chatStandard(Request $request)
+    {
+        $request->validate([
+            'message' => 'required|string|max:2000',
+            'mode' => 'required|string|in:standard,gemini',
+        ]);
+
+        $message = $request->input('message');
+        $mode = $request->input('mode', 'standard');
+        
+        // Save user message to database
+        $this->saveMessage('user', $message, $mode);
+        
+        $lowerMessage = strtolower($message);
+        $response = '';
+        
+        // Check for specific queries that need API calls
+        if (strpos($lowerMessage, 'còn hàng') !== false || strpos($lowerMessage, 'tồn kho') !== false) {
+            // Handle stock check
+            $productName = $this->extractProductName($message);
+            if ($productName) {
+                $product = Product::where('name', 'like', '%' . $productName . '%')->first();
+                if ($product) {
+                    $response = $this->formatStockResponse($product);
+                } else {
+                    $response = 'Không tìm thấy sản phẩm. Bạn có thể tìm kiếm sản phẩm trên <a href="/shop" target="_blank">trang Shop</a>.';
+                }
+            } else {
+                $response = 'Để kiểm tra tình trạng hàng chính xác, bạn có thể xem trực tiếp trên <a href="/shop" target="_blank">trang Shop</a>.';
+            }
+        } elseif (strpos($lowerMessage, 'da') !== false && (strpos($lowerMessage, 'nên') !== false || strpos($lowerMessage, 'phù hợp') !== false)) {
+            // Handle skin recommendations
+            $skinType = $this->extractSkinType($message);
+            if ($skinType) {
+                $response = $this->formatSkinRecommendation($skinType);
+            } else {
+                $response = $this->generateStandardResponse($message);
+            }
+        } else {
+            $response = $this->generateStandardResponse($message);
+        }
+        
+        // Save AI response to database
+        $this->saveMessage('ai', $response, $mode);
+        
+        return response()->json([
+            'success' => true,
+            'message' => $response
+        ]);
+    }
+
+    private function extractProductName($message)
+    {
+        $products = [
+            'kem dưỡng ẩm', 'serum', 'sữa rửa mặt', 'kem chống nắng', 'mặt nạ',
+            'kem nền', 'son môi', 'phấn phủ', 'nước hoa', 'dầu gội', 'serum tóc'
+        ];
+        
+        foreach ($products as $product) {
+            if (stripos($message, $product) !== false) {
+                return $product;
+            }
+        }
+        return null;
+    }
+
+    private function extractSkinType($message)
+    {
+        $skinTypes = [
+            'da khô' => 'dry',
+            'da dầu' => 'oily',
+            'da hỗn hợp' => 'combination',
+            'da nhạy cảm' => 'sensitive',
+            'da thường' => 'normal',
+            'da mụn' => 'acne-prone',
+            'da trưởng thành' => 'mature'
+        ];
+        
+        foreach ($skinTypes as $key => $value) {
+            if (stripos($message, $key) !== false) {
+                return $value;
+            }
+        }
+        return null;
+    }
+
+    private function formatStockResponse($product)
+    {
+        $status = $product->stock > 0 ? 'success' : 'warning';
+        $statusText = $product->stock > 0 ? 'Còn hàng' : 'Hết hàng';
+        
+        return "📦 <strong>{$product->name}</strong><br><br>" .
+               "Tình trạng: <span class=\"badge bg-{$status}\">{$statusText}</span><br>" .
+               "Số lượng: <strong>{$product->stock}</strong> sản phẩm<br><br>" .
+               "<a href=\"/product/{$product->id}\" class=\"btn btn-sm btn-primary mt-2\" target=\"_blank\">Xem chi tiết sản phẩm <i class=\"fas fa-external-link-alt ms-1\"></i></a>";
+    }
+
+    private function formatSkinRecommendation($skinType)
+    {
+        $recommendations = $this->getSkinTypeRecommendations($skinType);
+        $products = $this->getProductsForSkinType($skinType);
+        
+        $response = "🎯 <strong>Tư vấn cho da {$skinType}</strong><br><br>";
+        
+        if ($recommendations) {
+            $response .= "<strong>Thành phần nên dùng:</strong><br>";
+            foreach ($recommendations['ingredients'] as $ingredient) {
+                $response .= "• {$ingredient}<br>";
+            }
+            $response .= "<br><strong>Thành phần nên tránh:</strong><br>";
+            foreach ($recommendations['avoid'] as $item) {
+                $response .= "• {$item}<br>";
+            }
+        }
+        
+        if ($products && $products->count() > 0) {
+            $response .= "<br><strong>Sản phẩm phù hợp:</strong><br>";
+            foreach ($products->take(3) as $product) {
+                $response .= "• <a href=\"/product/{$product->id}\" target=\"_blank\">{$product->name}</a> - " . number_format($product->price) . " VNĐ<br>";
+            }
+            $response .= "<br><a href=\"/shop\" class=\"btn btn-sm btn-primary\" target=\"_blank\">Xem tất cả sản phẩm <i class=\"fas fa-external-link-alt ms-1\"></i></a>";
+        }
+        
+        return $response;
+    }
+
+    private function generateStandardResponse($message)
+    {
+        $lowerMessage = trim(strtolower($message));
+        
+        // Handle greetings
+        $greetings = ['hi', 'hello', 'xin chào', 'chào', 'chào bạn', 'hey', 'hế lô'];
+        foreach ($greetings as $greeting) {
+            if ($lowerMessage === $greeting || $lowerMessage === $greeting . '!') {
+                return 'Xin chào! 👋 Tôi là BeautyAI, trợ lý tư vấn mỹ phẩm của bạn. Tôi có thể giúp bạn:<br><br>' .
+                       '• Tìm kiếm và kiểm tra sản phẩm<br>' .
+                       '• Tư vấn về chăm sóc da<br>' .
+                       '• Gợi ý sản phẩm phù hợp với loại da của bạn<br>' .
+                       '• Trả lời các câu hỏi về làm đẹp<br><br>' .
+                       'Bạn muốn tìm hiểu về điều gì hôm nay? 😊<br><br>' .
+                       '<a href="/shop" class="btn btn-sm btn-primary mt-2" target="_blank">Xem sản phẩm <i class="fas fa-external-link-alt ms-1"></i></a>';
+            }
+        }
+        
+        $responses = [
+            'da khô' => 'Với làn da khô, tôi khuyên bạn nên sử dụng kem dưỡng ẩm có chứa Hyaluronic Acid và Ceramides. Sản phẩm phù hợp: Kem dưỡng ẩm chuyên sâu.<br><br><a href="/shop" class="btn btn-sm btn-primary mt-2" target="_blank">Xem sản phẩm cho da khô <i class="fas fa-external-link-alt ms-1"></i></a>',
+            'da dầu' => 'Làn da dầu cần sản phẩm kiểm soát bã nhờn. Tôi gợi ý: Sữa rửa mặt gel và kem dưỡng ẩm không gây nhờn.<br><br><a href="/shop" class="btn btn-sm btn-primary mt-2" target="_blank">Xem sản phẩm cho da dầu <i class="fas fa-external-link-alt ms-1"></i></a>',
+            'da nhạy cảm' => 'Da nhạy cảm cần sản phẩm dịu nhẹ. Hãy thử: Sữa rửa mặt dành cho da nhạy cảm và kem dưỡng ẩm phục hồi.<br><br><a href="/shop" class="btn btn-sm btn-primary mt-2" target="_blank">Xem sản phẩm cho da nhạy cảm <i class="fas fa-external-link-alt ms-1"></i></a>',
+            'mụn' => 'Để trị mụn hiệu quả, tôi khuyên: Sản phẩm chứa Salicylic Acid hoặc Benzoyl Peroxide.<br><br><a href="/shop" class="btn btn-sm btn-primary mt-2" target="_blank">Xem sản phẩm trị mụn <i class="fas fa-external-link-alt ms-1"></i></a>',
+            'chống lão hóa' => 'Sản phẩm chống lão hóa tốt nhất: Serum Vitamin C, Retinol và kem chống nắng SPF 50+.<br><br><a href="/shop" class="btn btn-sm btn-primary mt-2" target="_blank">Xem sản phẩm chống lão hóa <i class="fas fa-external-link-alt ms-1"></i></a>',
+            'serum' => 'Serum là sản phẩm chăm sóc da cô đặc. Tùy theo nhu cầu: Vitamin C (làm sáng), Hyaluronic Acid (dưỡng ẩm), Retinol (chống lão hóa).<br><br><a href="/shop" class="btn btn-sm btn-primary mt-2" target="_blank">Xem serum <i class="fas fa-external-link-alt ms-1"></i></a>',
+            'kem dưỡng' => 'Kem dưỡng ẩm nên chọn theo loại da: Da khô (dưỡng ẩm sâu), Da dầu (không gây nhờn), Da hỗn hợp (cân bằng).<br><br><a href="/shop" class="btn btn-sm btn-primary mt-2" target="_blank">Xem kem dưỡng <i class="fas fa-external-link-alt ms-1"></i></a>',
+        ];
+
+        foreach ($responses as $key => $response) {
+            if (strpos($lowerMessage, $key) !== false) {
+                return $response;
+            }
+        }
+
+        return 'Cảm ơn bạn đã hỏi! Tôi có thể tư vấn về:<br><br><strong>🔍 Tìm kiếm sản phẩm:</strong><br>- "còn hàng không", "giá bao nhiêu"<br><br><strong>👩‍⚕️ Tư vấn da:</strong><br>- "da khô", "da dầu", "da nhạy cảm"<br>- "mụn", "chống lão hóa", "dưỡng ẩm"<br><br><strong>💄 Sản phẩm cụ thể:</strong><br>- "serum", "kem dưỡng", "sữa rửa mặt"<br>- "trang điểm", "nước hoa", "chăm sóc tóc"<br><br><strong>🚚 Dịch vụ:</strong><br>- "giao hàng", "đổi trả", "hướng dẫn"<br><br>Bạn quan tâm đến vấn đề gì?<br><br><a href="/shop" class="btn btn-sm btn-primary mt-2" target="_blank">Xem tất cả sản phẩm <i class="fas fa-external-link-alt ms-1"></i></a>';
+    }
+
     public function getRecommendations(Request $request)
     {
         $userPreferences = $request->only(['skin_type', 'age_group', 'category', 'concerns', 'budget']);
@@ -50,7 +440,9 @@ class AIController extends Controller
             }
         }
         
-        $recommendations = $query->orderBy('average_rating', 'desc')
+            $recommendations = $query->withAvg('reviews', 'rating')
+                                ->withCount('reviews')
+                                ->orderBy('reviews_avg_rating', 'desc')
                                 ->orderBy('reviews_count', 'desc')
                                 ->limit(6)
                                 ->get();
@@ -154,11 +546,13 @@ class AIController extends Controller
         // Get trending products based on sales and reviews
         $trendingProducts = Product::with('reviews')
             ->active()
+            ->withAvg('reviews', 'rating')
+            ->withCount('reviews')
             ->whereHas('reviews', function($query) {
                 $query->where('created_at', '>=', now()->subDays(30));
             })
             ->orderBy('reviews_count', 'desc')
-            ->orderBy('average_rating', 'desc')
+            ->orderBy('reviews_avg_rating', 'desc')
             ->limit(10)
             ->get();
         

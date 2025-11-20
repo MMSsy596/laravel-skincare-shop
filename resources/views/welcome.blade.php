@@ -18,7 +18,7 @@
                     <a href="{{ route('shop') }}" class="btn btn-light btn-lg px-4">
                         <i class="fas fa-shopping-bag me-2"></i>Mua sắm ngay
                     </a>
-                    <a href="#ai-consultation" class="btn btn-outline-light btn-lg px-4">
+                    <a href="{{ route('ai.chat') }}" class="btn btn-outline-light btn-lg px-4">
                         <i class="fas fa-robot me-2"></i>Tư vấn AI
                     </a>
                 </div>
@@ -268,7 +268,7 @@
                 </div>
                 
                 <div class="d-flex gap-3">
-                    <a href="#ai-consultation" class="btn btn-primary btn-lg">
+                    <a href="{{ route('ai.chat') }}" class="btn btn-primary btn-lg">
                         <i class="fas fa-robot me-2"></i>Tư vấn AI
                     </a>
                     <a href="{{ route('shop') }}" class="btn btn-outline-primary btn-lg">

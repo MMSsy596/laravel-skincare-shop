@@ -17,12 +17,13 @@ class PaymentController extends Controller
             return redirect()->route('orders.show', $order->id)->with('error', 'Phương thức thanh toán không hợp lệ.');
         }
         
-        // Thông tin ngân hàng (có thể lưu trong config)
+        // Thông tin ngân hàng từ cấu hình
+        $paymentConfig = config('services.payment');
         $bankInfo = [
-            'bank_name' => 'Vietcombank',
-            'account_number' => '1234567890',
-            'account_name' => 'BEAUTY AI SHOP',
-            'branch' => 'Chi nhánh Hà Nội',
+            'bank_name' => $paymentConfig['bank_name'] ?? 'Vietcombank',
+            'account_number' => $paymentConfig['account_number'] ?? '',
+            'account_name' => $paymentConfig['account_name'] ?? '',
+            'branch' => $paymentConfig['branch'] ?? '',
             'transfer_content' => 'DH' . str_pad($order->id, 6, '0', STR_PAD_LEFT),
         ];
         
@@ -37,11 +38,12 @@ class PaymentController extends Controller
             return redirect()->route('orders.show', $order->id)->with('error', 'Phương thức thanh toán không hợp lệ.');
         }
         
-        // Tạo QR code data cho MB Bank
+        // Tạo QR code data
+        $paymentConfig = config('services.payment');
         $qrData = [
-            'bank_name' => 'Vietcombank',
-            'account_number' => '1234567890',
-            'account_name' => 'BEAUTY AI SHOP',
+            'bank_name' => $paymentConfig['bank_name'] ?? 'Vietcombank',
+            'account_number' => $paymentConfig['account_number'] ?? '',
+            'account_name' => $paymentConfig['account_name'] ?? '',
             'amount' => $order->total,
             'content' => 'DH' . str_pad($order->id, 6, '0', STR_PAD_LEFT),
         ];
@@ -183,4 +185,4 @@ class PaymentController extends Controller
         }
         return false;
     }
-} 
+}

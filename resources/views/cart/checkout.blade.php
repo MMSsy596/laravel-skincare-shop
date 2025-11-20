@@ -1,6 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
+<div class="checkout-page">
 <!-- Google Maps API -->
 @if(config('services.google.maps_api_key'))
 <script src="https://maps.googleapis.com/maps/api/js?key={{ config('services.google.maps_api_key') }}&libraries=places&language=vi&region=VN" async defer></script>
@@ -42,9 +43,20 @@
                             <textarea class="form-control" id="shipping_address_detail" name="shipping_address_detail" rows="2" 
                                       placeholder="Số nhà, tên đường, phường/xã (nếu cần bổ sung)..." 
                                       style="display: none;"></textarea>
-                            <div id="addressInfo" class="mt-2 small text-muted" style="display: none;">
-                                <i class="fas fa-info-circle me-1"></i>
-                                <span id="distanceInfo"></span>
+                            <div id="addressInfo" class="mt-3 p-3 bg-light rounded border" style="display: none;">
+                                <div class="d-flex align-items-start">
+                                    <i class="fas fa-map-marker-alt text-primary me-2 mt-1"></i>
+                                    <div class="flex-grow-1">
+                                        <div class="fw-semibold mb-2 text-dark">
+                                            <i class="fas fa-location-dot me-1 text-primary"></i>Thông tin vị trí
+                                        </div>
+                                        <div id="locationDetails" class="small text-muted">
+                                            <div id="fullAddress" class="mb-2"></div>
+                                            <div id="coordinates" class="mb-2"></div>
+                                            <div id="distanceInfo" class="text-primary fw-semibold"></div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                             <input type="hidden" id="latitude" name="latitude">
                             <input type="hidden" id="longitude" name="longitude">
@@ -222,11 +234,10 @@
                 </div>
                 <div class="card-body">
                     <ul class="list-group list-group-flush mb-3">
-                        @php $total = 0; $hasStockIssues = false; @endphp
+                        @php $hasStockIssues = false; @endphp
                         @foreach($cart as $id => $item)
                             @php 
-                                $subtotal = $item['price'] * $item['quantity'];
-                                $total += $subtotal;
+                                $itemSubtotal = $item['price'] * $item['quantity'];
                                 $stock = $item['stock'] ?? 0;
                                 $isOutOfStock = $stock < $item['quantity'];
                                 if ($isOutOfStock) $hasStockIssues = true;
@@ -260,7 +271,7 @@
                                     </div>
                                 </div>
                                 <div class="text-end">
-                                    <strong>{{ number_format($subtotal) }} VNĐ</strong>
+                                    <strong>{{ number_format($itemSubtotal) }} VNĐ</strong>
                                 </div>
                             </li>
                         @endforeach
@@ -401,6 +412,171 @@ function initAutocomplete() {
     }
 }
 
+// Display location details
+function displayLocationDetails(lat, lng, geocodeResult) {
+    const addressInfo = document.getElementById('addressInfo');
+    const fullAddressEl = document.getElementById('fullAddress');
+    const coordinatesEl = document.getElementById('coordinates');
+    
+    if (!addressInfo) return;
+    
+    // Hiển thị tọa độ
+    if (coordinatesEl) {
+        coordinatesEl.innerHTML = `
+            <div class="d-flex align-items-center mb-1">
+                <i class="fas fa-globe me-2 text-info"></i>
+                <span><strong>Tọa độ:</strong> ${lat.toFixed(6)}, ${lng.toFixed(6)}</span>
+            </div>
+        `;
+    }
+    
+    // Hiển thị địa chỉ chi tiết nếu có
+    if (geocodeResult && fullAddressEl) {
+        const addressComponents = geocodeResult.address_components || [];
+        let streetNumber = '';
+        let route = '';
+        let ward = '';
+        let district = '';
+        let city = '';
+        let country = '';
+        
+        addressComponents.forEach(component => {
+            const types = component.types;
+            if (types.includes('street_number')) {
+                streetNumber = component.long_name;
+            } else if (types.includes('route')) {
+                route = component.long_name;
+            } else if (types.includes('sublocality') || types.includes('sublocality_level_1')) {
+                ward = component.long_name;
+            } else if (types.includes('administrative_area_level_2')) {
+                district = component.long_name;
+            } else if (types.includes('administrative_area_level_1')) {
+                city = component.long_name;
+            } else if (types.includes('country')) {
+                country = component.long_name;
+            }
+        });
+        
+        let addressParts = [];
+        if (streetNumber && route) {
+            addressParts.push(`${streetNumber} ${route}`);
+        } else if (route) {
+            addressParts.push(route);
+        }
+        if (ward) addressParts.push(ward);
+        if (district) addressParts.push(district);
+        if (city) addressParts.push(city);
+        if (country) addressParts.push(country);
+        
+        const detailedAddress = addressParts.join(', ');
+        
+        fullAddressEl.innerHTML = `
+            <div class="mb-2">
+                <i class="fas fa-map-pin me-2 text-success"></i>
+                <strong>Địa chỉ:</strong> ${geocodeResult.formatted_address}
+            </div>
+            ${detailedAddress ? `
+            <div class="mb-2">
+                <i class="fas fa-info-circle me-2 text-info"></i>
+                <strong>Chi tiết:</strong> ${detailedAddress}
+            </div>
+            ` : ''}
+        `;
+    } else if (fullAddressEl) {
+        fullAddressEl.innerHTML = `
+            <div class="mb-2">
+                <i class="fas fa-exclamation-triangle me-2 text-warning"></i>
+                <span>Không thể lấy địa chỉ chi tiết. Vui lòng nhập thủ công.</span>
+            </div>
+        `;
+    }
+    
+    // Hiển thị container
+    addressInfo.style.display = 'block';
+}
+
+// Reverse geocode using Nominatim (OpenStreetMap) as fallback
+async function reverseGeocodeWithNominatim(lat, lng, addressInput, btn) {
+    try {
+        const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=vi&zoom=18&addressdetails=1`);
+        const data = await response.json();
+        
+        if (data && data.display_name) {
+            const formattedAddress = data.display_name;
+            if (addressInput) {
+                addressInput.value = formattedAddress;
+            }
+            
+            // Tạo object tương tự Google Geocoder result
+            const geocodeResult = {
+                formatted_address: formattedAddress,
+                address_components: []
+            };
+            
+            if (data.address) {
+                const addr = data.address;
+                if (addr.house_number) {
+                    geocodeResult.address_components.push({
+                        types: ['street_number'],
+                        long_name: addr.house_number
+                    });
+                }
+                if (addr.road) {
+                    geocodeResult.address_components.push({
+                        types: ['route'],
+                        long_name: addr.road
+                    });
+                }
+                if (addr.suburb || addr.neighbourhood) {
+                    geocodeResult.address_components.push({
+                        types: ['sublocality'],
+                        long_name: addr.suburb || addr.neighbourhood
+                    });
+                }
+                if (addr.city || addr.town || addr.village) {
+                    geocodeResult.address_components.push({
+                        types: ['administrative_area_level_2'],
+                        long_name: addr.city || addr.town || addr.village
+                    });
+                }
+                if (addr.state) {
+                    geocodeResult.address_components.push({
+                        types: ['administrative_area_level_1'],
+                        long_name: addr.state
+                    });
+                }
+                if (addr.country) {
+                    geocodeResult.address_components.push({
+                        types: ['country'],
+                        long_name: addr.country
+                    });
+                }
+            }
+            
+            displayLocationDetails(lat, lng, geocodeResult);
+            calculateShippingFromLocation(lat, lng, formattedAddress);
+        } else {
+            if (addressInput) {
+                addressInput.value = `Vị trí: ${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+            }
+            displayLocationDetails(lat, lng, null);
+            calculateShippingFromLocation(lat, lng, '');
+        }
+    } catch (error) {
+        console.error('Nominatim geocoding error:', error);
+        if (addressInput) {
+            addressInput.value = `Vị trí: ${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+        }
+        displayLocationDetails(lat, lng, null);
+        calculateShippingFromLocation(lat, lng, '');
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-crosshairs me-1"></i>Lấy vị trí';
+        }
+    }
+}
+
 // Get current location using browser geolocation
 function getCurrentLocation() {
     const btn = document.getElementById('getLocationBtn');
@@ -427,40 +603,45 @@ function getCurrentLocation() {
                         language: 'vi'
                     }, function(results, status) {
                         if (status === 'OK' && results[0]) {
+                            const result = results[0];
+                            const formattedAddress = result.formatted_address;
+                            
                             // Điền địa chỉ vào ô input
-                            const formattedAddress = results[0].formatted_address;
                             if (addressInput) {
                                 addressInput.value = formattedAddress;
                             }
+                            
+                            // Hiển thị thông tin chi tiết
+                            displayLocationDetails(lat, lng, result);
+                            
                             calculateShippingFromLocation(lat, lng, formattedAddress);
                         } else {
                             // Nếu reverse geocode thất bại, vẫn điền tọa độ vào ô địa chỉ
                             if (addressInput) {
                                 addressInput.value = `Vị trí: ${lat.toFixed(6)}, ${lng.toFixed(6)}`;
                             }
+                            
+                            // Hiển thị thông tin tọa độ
+                            displayLocationDetails(lat, lng, null);
+                            
                             calculateShippingFromLocation(lat, lng, '');
                         }
                         btn.disabled = false;
                         btn.innerHTML = '<i class="fas fa-crosshairs me-1"></i>Lấy vị trí';
                     });
                 } else {
-                    // Không có Google Maps, vẫn điền tọa độ vào ô địa chỉ
-                    if (addressInput) {
-                        addressInput.value = `Vị trí: ${lat.toFixed(6)}, ${lng.toFixed(6)}`;
-                    }
-                    calculateShippingFromLocation(lat, lng, '');
-                    btn.disabled = false;
-                    btn.innerHTML = '<i class="fas fa-crosshairs me-1"></i>Lấy vị trí';
+                    // Không có Google Maps, sử dụng Nominatim API
+                    reverseGeocodeWithNominatim(lat, lng, addressInput, btn);
                 }
             },
             function(error) {
-                alert('Không thể lấy vị trí. Vui lòng nhập địa chỉ thủ công.');
+                if (window.notify) window.notify({ type: 'warning', title: 'Vị trí', message: 'Không thể lấy vị trí. Vui lòng nhập địa chỉ thủ công.', duration: 4000 });
                 btn.disabled = false;
                 btn.innerHTML = '<i class="fas fa-crosshairs me-1"></i>Lấy vị trí';
             }
         );
     } else {
-        alert('Trình duyệt không hỗ trợ lấy vị trí.');
+        if (window.notify) window.notify({ type: 'error', title: 'Vị trí', message: 'Trình duyệt không hỗ trợ lấy vị trí.', duration: 4000 });
         btn.disabled = false;
         btn.innerHTML = '<i class="fas fa-crosshairs me-1"></i>Lấy vị trí';
     }
@@ -525,10 +706,26 @@ function calculateShippingFromLocation(lat, lng, address) {
         if (addressInfo && distanceInfo) {
             addressInfo.style.display = 'block';
             if (data.distance !== null) {
-                distanceInfo.innerHTML = `Khoảng cách: <strong>${data.distance} km</strong> từ shop (${data.shop_address})`;
+                const distance = parseFloat(data.distance);
+                const shippingFee = data.shipping_fee || 0;
+                distanceInfo.innerHTML = `
+                    <div class="d-flex align-items-center mb-1">
+                        <i class="fas fa-route me-2 text-primary"></i>
+                        <span><strong>Khoảng cách:</strong> ${distance.toFixed(2)} km từ shop</span>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-shipping-fast me-2 text-success"></i>
+                        <span><strong>Phí vận chuyển:</strong> ${shippingFee.toLocaleString('vi-VN')} VNĐ</span>
+                    </div>
+                `;
                 document.getElementById('distance').value = data.distance;
             } else {
-                distanceInfo.innerHTML = `Không xác định được khoảng cách. Sử dụng phí mặc định.`;
+                distanceInfo.innerHTML = `
+                    <div class="text-warning">
+                        <i class="fas fa-exclamation-triangle me-1"></i>
+                        Không xác định được khoảng cách. Sử dụng phí mặc định.
+                    </div>
+                `;
             }
         }
         
@@ -543,7 +740,12 @@ function calculateShippingFromLocation(lat, lng, address) {
         const distanceInfo = document.getElementById('distanceInfo');
         if (addressInfo && distanceInfo) {
             addressInfo.style.display = 'block';
-            distanceInfo.innerHTML = 'Không thể tính khoảng cách tự động. Vui lòng kiểm tra lại địa chỉ hoặc thử lại sau.';
+            distanceInfo.innerHTML = `
+                <div class="text-danger">
+                    <i class="fas fa-exclamation-circle me-1"></i>
+                    Không thể tính khoảng cách tự động. Vui lòng kiểm tra lại địa chỉ hoặc thử lại sau.
+                </div>
+            `;
         }
     });
 }
@@ -790,5 +992,5 @@ if (voucherCodeInput) {
 })();
 
 </script>
-
-@endsection 
+</div>
+@endsection

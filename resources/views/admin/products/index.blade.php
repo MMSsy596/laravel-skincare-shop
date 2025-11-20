@@ -26,7 +26,7 @@
                             </div>
                         </div>
                         <div class="flex-grow-1 ms-3">
-                            <h4 class="mb-1">{{ $products->count() }}</h4>
+                            <h4 class="mb-1">{{ $stats['total'] ?? $products->total() }}</h4>
                             <p class="text-muted mb-0">Tổng sản phẩm</p>
                         </div>
                     </div>
@@ -43,7 +43,7 @@
                             </div>
                         </div>
                         <div class="flex-grow-1 ms-3">
-                            <h4 class="mb-1">{{ $products->where('is_active', true)->count() }}</h4>
+                            <h4 class="mb-1">{{ $stats['active'] ?? 0 }}</h4>
                             <p class="text-muted mb-0">Đang hoạt động</p>
                         </div>
                     </div>
@@ -60,7 +60,7 @@
                             </div>
                         </div>
                         <div class="flex-grow-1 ms-3">
-                            <h4 class="mb-1">{{ $products->where('is_featured', true)->count() }}</h4>
+                            <h4 class="mb-1">{{ $stats['featured'] ?? 0 }}</h4>
                             <p class="text-muted mb-0">Sản phẩm nổi bật</p>
                         </div>
                     </div>
@@ -77,7 +77,7 @@
                             </div>
                         </div>
                         <div class="flex-grow-1 ms-3">
-                            <h4 class="mb-1">{{ $products->where('stock', '<=', 10)->where('stock', '>', 0)->count() }}</h4>
+                            <h4 class="mb-1">{{ $stats['low_stock'] ?? 0 }}</h4>
                             <p class="text-muted mb-0">Sắp hết hàng</p>
                         </div>
                     </div>
@@ -125,10 +125,10 @@
                 </div>
                 <div class="col-md-3 d-flex align-items-end">
                     <button type="submit" class="btn btn-primary me-2">
-                        <i class="fas fa-search me-2"></i>Tìm kiếm
+                        <i class="fas fa-search me-2"></i><span data-i18n="search.submit"> dTìm kiếm</span>
                     </button>
                     <a href="{{ route('admin.products.index') }}" class="btn btn-outline-secondary">
-                        <i class="fas fa-refresh me-2"></i>Làm mới
+                        <i class="fas fa-refresh me-2"></i><span data-i18n="refresh">Làm mới</span>
                     </a>
                 </div>
             </form>
@@ -142,10 +142,10 @@
                 <h5 class="mb-0">Danh sách sản phẩm ({{ $products->count() }})</h5>
                 <div class="d-flex gap-2">
                     <button class="btn btn-outline-primary btn-sm" onclick="exportProducts()">
-                        <i class="fas fa-download me-2"></i>Xuất Excel
+                        <i class="fas fa-download me-2"></i><span data-i18n="export.excel">Xuất Excel</span>
                     </button>
                     <button class="btn btn-outline-success btn-sm" onclick="bulkActivate()">
-                        <i class="fas fa-check me-2"></i>Kích hoạt hàng loạt
+                        <i class="fas fa-check me-2"></i><span data-i18n="bulk.activate">Kích hoạt hàng loạt</span>
                     </button>
                 </div>
             </div>
@@ -221,8 +221,9 @@
                                 <td>
                                     <div class="d-flex align-items-center">
                                         <div class="stars me-2">
+                                            @php $stars = round($product->reviews_avg_rating ?? 0); @endphp
                                             @for($i = 1; $i <= 5; $i++)
-                                                <i class="fas fa-star {{ $i <= $product->average_rating ? 'text-warning' : 'text-muted' }}" style="font-size: 12px;"></i>
+                                                <i class="fas fa-star {{ $i <= $stars ? 'text-warning' : 'text-muted' }}" style="font-size: 12px;"></i>
                                             @endfor
                                         </div>
                                         <small class="text-muted">({{ $product->reviews_count }})</small>
@@ -240,6 +241,7 @@
                                         </a>
                                         <button type="button" class="btn btn-outline-danger btn-sm" 
                                                 onclick="deleteProduct({{ $product->id }})" title="Xóa">
+
                                             <i class="fas fa-trash"></i>
                                         </button>
                                     </div>
@@ -324,13 +326,32 @@ function bulkActivate() {
         .map(checkbox => checkbox.value);
     
     if (selectedProducts.length === 0) {
-        alert('Vui lòng chọn ít nhất một sản phẩm');
+        if (window.notify) window.notify({ type: 'warning', title: 'Chú ý', message: 'Vui lòng chọn ít nhất một sản phẩm', duration: 3000 });
         return;
     }
     
     if (confirm(`Bạn có chắc chắn muốn kích hoạt ${selectedProducts.length} sản phẩm?`)) {
-        // Implement bulk activate functionality
-        console.log('Bulk activate:', selectedProducts);
+        const token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        fetch("{{ route('admin.products.bulk-activate') }}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': token,
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({ ids: selectedProducts })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                if (window.notify) window.notify({ type: 'success', title: 'Thành công', message: data.message, duration: 3000 });
+                window.location.reload();
+            } else {
+                if (window.notify) window.notify({ type: 'error', title: 'Thất bại', message: 'Không thể kích hoạt. Vui lòng thử lại.', duration: 3000 });
+            }
+        })
+        .catch(() => { if (window.notify) window.notify({ type: 'error', title: 'Lỗi', message: 'Có lỗi xảy ra. Vui lòng thử lại.', duration: 3000 }); });
     }
 }
 

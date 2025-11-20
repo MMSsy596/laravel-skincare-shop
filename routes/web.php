@@ -4,6 +4,7 @@ use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\Admin\ProductController as AdminProductController;
+use App\Http\Controllers\ProductController;
 use App\Http\Controllers\Admin\ReviewController as AdminReviewController;
 use App\Http\Controllers\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\Admin\VoucherController as AdminVoucherController;
@@ -32,55 +33,22 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+// AI Chat Page (public)
+Route::get('/ai/chat', [AIController::class, 'chat'])->name('ai.chat');
+Route::post('/ai/chat/gemini', [AIController::class, 'chatWithGemini'])->name('ai.chat.gemini');
+Route::post('/ai/chat/standard', [AIController::class, 'chatStandard'])->name('ai.chat.standard');
+Route::get('/ai/chat/history', [AIController::class, 'getChatHistoryApi'])->name('ai.chat.history');
+Route::delete('/ai/chat/history', [AIController::class, 'clearChatHistory'])->name('ai.chat.clear');
+
 Route::get('/dashboard', function () {
     return view('dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 // Public routes (không cần đăng nhập)
-Route::get('/shop', function () {
-    $query = \App\Models\Product::query();
-    
-    // Tìm kiếm
-    if (request('search')) {
-        $query->where('name', 'like', '%' . request('search') . '%')
-              ->orWhere('description', 'like', '%' . request('search') . '%');
-    }
-    
-    // Sắp xếp
-    switch (request('sort')) {
-        case 'price_asc':
-            $query->orderBy('price', 'asc');
-            break;
-        case 'price_desc':
-            $query->orderBy('price', 'desc');
-            break;
-        case 'name_asc':
-            $query->orderBy('name', 'asc');
-            break;
-        case 'name_desc':
-            $query->orderBy('name', 'desc');
-            break;
-        default:
-            $query->latest();
-    }
-    
-    $products = $query->paginate(12);
-    return view('shop', compact('products'));
-})->name('shop');
+Route::get('/shop', [ProductController::class, 'index'])->name('shop');
 
 // Trang chi tiết sản phẩm (public)
-Route::get('/product/{id}', function ($id) {
-    $product = \App\Models\Product::findOrFail($id);
-    
-    // Lấy sản phẩm tương tự
-    $similarProducts = \App\Models\Product::where('category', $product->category)
-        ->where('id', '!=', $product->id)
-        ->where('is_active', true)
-        ->limit(4)
-        ->get();
-    
-    return view('products.show', compact('product', 'similarProducts'));
-})->name('product.show');
+Route::get('/product/{id}', [ProductController::class, 'show'])->name('product.show');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -105,6 +73,8 @@ Route::middleware('auth')->group(function () {
             'update' => 'admin.products.update',
             'destroy' => 'admin.products.destroy',
         ]);
+        Route::post('/admin/products/bulk-activate', [AdminProductController::class, 'bulkActivate'])
+            ->name('admin.products.bulk-activate');
         Route::get('/admin/dashboard', function () {
             return view('admin.dashboard');
         })->name('admin.dashboard');

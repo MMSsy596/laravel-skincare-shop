@@ -70,9 +70,6 @@ class Product extends Model
         'all' => 'Mọi lứa tuổi',
     ];
 
-    public function isAdmin() {
-        return $this->role === 'admin';
-    }
 
     public function reviews()
     {

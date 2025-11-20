@@ -42,7 +42,7 @@
                                                          style="width: 80px; height: 80px; object-fit: cover;">
                                                     <div>
                                                         <h6 class="mb-1">{{ $item['name'] }}</h6>
-                                                        <small class="text-muted">SKU: {{ \App\Models\Product::find($id)->sku ?? 'N/A' }}</small>
+                                                        <small class="text-muted">SKU: {{ $item['sku'] ?? 'N/A' }}</small>
                                                         @if($isOutOfStock)
                                                             <div class="mt-1">
                                                                 <span class="badge bg-warning text-dark">

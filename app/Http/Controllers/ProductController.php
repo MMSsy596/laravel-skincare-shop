@@ -9,7 +9,10 @@ class ProductController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Product::with('reviews')->active();
+        $query = Product::with('reviews')
+            ->withAvg('reviews', 'rating')
+            ->withCount('reviews')
+            ->active();
 
         // Search functionality
         if ($request->filled('search')) {
@@ -70,7 +73,7 @@ class ProductController extends Controller
                 $query->orderBy('name', 'desc');
                 break;
             case 'rating':
-                $query->orderBy('average_rating', 'desc');
+                $query->orderBy('reviews_avg_rating', 'desc');
                 break;
             case 'newest':
                 $query->latest();
@@ -106,10 +109,11 @@ class ProductController extends Controller
         $aiRecommendations = Product::active()
             ->where('category', $product->category)
             ->where('id', '!=', $product->id)
-            ->orderBy('average_rating', 'desc')
+            ->withAvg('reviews', 'rating')
+            ->orderBy('reviews_avg_rating', 'desc')
             ->limit(4)
             ->get();
-
+        
         return view('products.show', compact('product', 'aiAnalysis', 'similarProducts', 'aiRecommendations'));
     }
 
@@ -118,6 +122,8 @@ class ProductController extends Controller
         $userPreferences = $request->only(['skin_type', 'age_group', 'category', 'concerns']);
         
         $recommendations = Product::active()
+            ->withAvg('reviews', 'rating')
+            ->withCount('reviews')
             ->when($userPreferences['skin_type'] ?? false, function($query, $skinType) {
                 return $query->where('skin_type', $skinType);
             })
@@ -127,7 +133,7 @@ class ProductController extends Controller
             ->when($userPreferences['category'] ?? false, function($query, $category) {
                 return $query->where('category', $category);
             })
-            ->orderBy('average_rating', 'desc')
+            ->orderBy('reviews_avg_rating', 'desc')
             ->orderBy('reviews_count', 'desc')
             ->limit(6)
             ->get();
@@ -149,6 +155,8 @@ class ProductController extends Controller
 
         $products = Product::search($query)
             ->with('reviews')
+            ->withAvg('reviews', 'rating')
+            ->withCount('reviews')
             ->paginate(12)
             ->withQueryString();
 

@@ -58,7 +58,7 @@
                                placeholder="Tìm kiếm sản phẩm mỹ phẩm..." 
                                value="{{ request('search') }}">
                         <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-search"></i>
+                            <i class="fas fa-search"></i><span class="ms-1" data-i18n="search.submit">Tìm kiếm</span>
                         </button>
                     </div>
                 </form>
@@ -69,19 +69,25 @@
                 <select class="form-select" onchange="window.location.href=this.value">
                     <option value="{{ route('shop') }}">Sắp xếp theo</option>
                     <option value="{{ route('shop', ['sort' => 'price_asc']) }}" {{ request('sort') == 'price_asc' ? 'selected' : '' }}>
-                        <i class="fas fa-sort-amount-up"></i> Giá tăng dần
+                        <i class="fas fa-sort-amount-up"></i> <span data-i18n="shop.sort.price_asc">Giá tăng dần</span>
                     </option>
                     <option value="{{ route('shop', ['sort' => 'price_desc']) }}" {{ request('sort') == 'price_desc' ? 'selected' : '' }}>
-                        <i class="fas fa-sort-amount-down"></i> Giá giảm dần
+                        <i class="fas fa-sort-amount-down"></i> <span data-i18n="shop.sort.price_desc">Giá giảm dần</span>
                     </option>
                     <option value="{{ route('shop', ['sort' => 'name_asc']) }}" {{ request('sort') == 'name_asc' ? 'selected' : '' }}>
-                        <i class="fas fa-sort-alpha-up"></i> Tên A-Z
+                        <i class="fas fa-sort-alpha-up"></i> <span data-i18n="shop.sort.name_asc">Tên A-Z</span>
                     </option>
                     <option value="{{ route('shop', ['sort' => 'name_desc']) }}" {{ request('sort') == 'name_desc' ? 'selected' : '' }}>
-                        <i class="fas fa-sort-alpha-down"></i> Tên Z-A
+                        <i class="fas fa-sort-alpha-down"></i> <span data-i18n="shop.sort.name_desc">Tên Z-A</span>
                     </option>
                     <option value="{{ route('shop', ['sort' => 'rating']) }}" {{ request('sort') == 'rating' ? 'selected' : '' }}>
-                        <i class="fas fa-star"></i> Đánh giá cao nhất
+                        <i class="fas fa-star"></i> <span data-i18n="shop.sort.rating">Đánh giá cao nhất</span>
+                    </option>
+                    <option value="{{ route('shop', ['sort' => 'popular']) }}" {{ request('sort') == 'popular' ? 'selected' : '' }}>
+                        <i class="fas fa-fire"></i> <span data-i18n="shop.sort.popular">Phổ biến nhất</span>
+                    </option>
+                    <option value="{{ route('shop', ['sort' => 'newest']) }}" {{ request('sort') == 'newest' ? 'selected' : '' }}>
+                        <i class="fas fa-clock"></i> <span data-i18n="shop.sort.newest">Mới nhất</span>
                     </option>
                 </select>
             </div>
@@ -155,10 +161,10 @@
                     <div class="d-flex align-items-center gap-3">
                         <span class="text-muted">Hiển thị:</span>
                         <div class="btn-group btn-group-sm" role="group">
-                            <button type="button" class="btn btn-outline-primary active" onclick="setViewMode('grid')">
+                            <button type="button" class="btn btn-outline-primary active" onclick="setViewMode('grid', this)">
                                 <i class="fas fa-th"></i>
                             </button>
-                            <button type="button" class="btn btn-outline-primary" onclick="setViewMode('list')">
+                            <button type="button" class="btn btn-outline-primary" onclick="setViewMode('list', this)">
                                 <i class="fas fa-list"></i>
                             </button>
                         </div>
@@ -187,7 +193,7 @@
                         <!-- Quick Actions Overlay -->
                         <div class="position-absolute top-0 end-0 p-2">
                             <button class="btn btn-light btn-sm rounded-circle shadow-sm" 
-                                    onclick="addToWishlist({{ $product->id }})" 
+                                    onclick="addToWishlist(event, {{ $product->id }})" 
                                     title="Thêm vào yêu thích">
                                 <i class="fas fa-heart text-muted"></i>
                             </button>
@@ -199,10 +205,11 @@
                         </div>
                         
                         <!-- Rating Badge -->
-                        @if($product->average_rating > 0)
+                        @php $rating = $product->reviews_avg_rating ?? $product->average_rating; @endphp
+                        @if($rating > 0)
                         <div class="position-absolute bottom-0 start-0 p-2">
                             <span class="badge bg-warning text-dark">
-                                <i class="fas fa-star me-1"></i>{{ number_format($product->average_rating, 1) }}
+                                <i class="fas fa-star me-1"></i>{{ number_format($rating, 1) }}
                             </span>
                         </div>
                         @endif
@@ -216,8 +223,9 @@
                         <!-- Rating Stars -->
                         <div class="mb-3">
                             <div class="rating-stars">
+                                @php $stars = round($rating); @endphp
                                 @for($i = 1; $i <= 5; $i++)
-                                    <i class="fas fa-star {{ $i <= $product->average_rating ? 'text-warning' : 'text-muted' }}"></i>
+                                    <i class="fas fa-star {{ $i <= $stars ? 'text-warning' : 'text-muted' }}"></i>
                                 @endfor
                                 <small class="text-muted ms-2">({{ $product->reviews_count }})</small>
                             </div>
@@ -316,12 +324,12 @@
 
 <script>
 // View mode toggle
-function setViewMode(mode) {
+function setViewMode(mode, btn) {
     const container = document.getElementById('productsContainer');
     const buttons = document.querySelectorAll('.btn-group .btn');
     
-    buttons.forEach(btn => btn.classList.remove('active'));
-    event.target.classList.add('active');
+    buttons.forEach(b => b.classList.remove('active'));
+    if (btn) { btn.classList.add('active'); }
     
     if (mode === 'list') {
         container.classList.add('list-view');
@@ -337,22 +345,19 @@ function setViewMode(mode) {
 }
 
 // Wishlist functionality
-function addToWishlist(productId) {
+function addToWishlist(e, productId) {
     // Implement wishlist functionality
-    const button = event.target.closest('button');
-    const icon = button.querySelector('i');
+    const button = e && e.target ? e.target.closest('button') : null;
+    const icon = button ? button.querySelector('i') : null;
     
-    if (icon.classList.contains('text-muted')) {
+    if (icon && icon.classList.contains('text-muted')) {
         icon.classList.remove('text-muted');
         icon.classList.add('text-danger');
-        button.classList.add('btn-danger');
-        button.classList.remove('btn-light');
+        if (button) { button.classList.add('btn-danger'); button.classList.remove('btn-light'); }
         showToast('Đã thêm vào danh sách yêu thích!', 'success');
     } else {
-        icon.classList.remove('text-danger');
-        icon.classList.add('text-muted');
-        button.classList.remove('btn-danger');
-        button.classList.add('btn-light');
+        if (icon) { icon.classList.remove('text-danger'); icon.classList.add('text-muted'); }
+        if (button) { button.classList.remove('btn-danger'); button.classList.add('btn-light'); }
         showToast('Đã xóa khỏi danh sách yêu thích!', 'info');
     }
 }
@@ -379,6 +384,9 @@ function showToast(message, type = 'info') {
     toast.addEventListener('hidden.bs.toast', () => {
         document.body.removeChild(toast);
     });
+    if (window.notify) {
+        window.notify({ type: type === 'danger' ? 'error' : type, title: 'Thông báo', message: message, duration: 3000 });
+    }
 }
 
 // Smooth scroll to AI consultation
@@ -393,4 +401,4 @@ document.querySelectorAll('a[href="#ai-consultation"]').forEach(link => {
 });
 </script>
 
-@endsection 
+@endsection

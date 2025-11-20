@@ -4,6 +4,7 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <title>{{ config('app.name', 'BeautyAI Shop') }}</title>
+        <meta name="csrf-token" content="{{ csrf_token() }}">
         
         <!-- Bootstrap 5 CSS -->
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -17,6 +18,33 @@
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
 <body class="font-sans antialiased">
+    <div id="dynamicIsland" class="dynamic-island collapsed info">
+        <div class="di-icon"><i class="fas fa-spa"></i></div>
+        <div class="di-content"><span class="di-title"></span><span class="di-message"></span></div>
+    </div>
+    <div id="diSettingsPanel" class="di-settings-panel">
+            <div class="di-settings-header">
+                <span class="di-settings-title">Cài đặt</span>
+                <button class="btn btn-sm btn-outline-primary" onclick="toggleDiSettings(false)"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Giao diện</label>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-outline-primary btn-pill" onclick="setTheme('light')"><i class="fas fa-sun me-1"></i>Sáng</button>
+                    <button class="btn btn-outline-primary btn-pill" onclick="setTheme('dark')"><i class="fas fa-moon me-1"></i>Tối</button>
+                </div>
+            </div>
+            <div class="mb-2">
+                <label class="form-label">Ngôn ngữ</label>
+                <select class="form-select" id="diLanguageSelect" onchange="setLanguage(this.value)">
+                    <option value="vi">Tiếng Việt</option>
+                    <option value="en">English</option>
+                    <option value="zh">中文</option>
+                    <option value="ko">한국어</option>
+                    <option value="ja">日本語</option>
+                </select>
+            </div>
+    </div>
     <div class="min-vh-100 d-flex flex-column">
         <!-- Main Navigation -->
         <nav class="navbar navbar-light navbar-expand-lg fixed-top theme-navbar">
@@ -37,17 +65,17 @@
                         <!-- Public Links -->
                         <li class="nav-item">
                             <a class="nav-link" href="{{ route('shop') }}">
-                                <i class="fas fa-shopping-bag me-1"></i>Mỹ phẩm
+                                <i class="fas fa-shopping-bag me-1"></i><span data-i18n="nav.shop">Mỹ phẩm</span>
                             </a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="#categories">
-                                <i class="fas fa-tags me-1"></i>Danh mục
+                                <i class="fas fa-tags me-1"></i><span data-i18n="nav.categories">Danh mục</span>
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="#ai-consultation">
-                                <i class="fas fa-robot me-1"></i>Tư vấn AI
+                            <a class="nav-link" href="{{ route('ai.chat') }}">
+                                <i class="fas fa-robot me-1"></i><span data-i18n="nav.ai">Tư vấn AI</span>
                             </a>
                         </li>
                         
@@ -57,78 +85,64 @@
                                 <!-- Admin Links -->
                                 <li class="nav-item dropdown">
                                     <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                                        <i class="fas fa-cog me-1"></i>Quản trị
+                                        <i class="fas fa-cog me-1"></i><span data-i18n="nav.admin">Quản trị</span>
                                     </a>
                                     <ul class="dropdown-menu">
                                         <li><a class="dropdown-item" href="{{ route('admin.dashboard') }}">
-                                            <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+                                            <i class="fas fa-tachometer-alt me-2"></i><span data-i18n="admin.dashboard">Dashboard</span>
                                         </a></li>
                                         <li><a class="dropdown-item" href="{{ route('admin.products.index') }}">
-                                            <i class="fas fa-box me-2"></i>Quản lý sản phẩm
+                                            <i class="fas fa-box me-2"></i><span data-i18n="admin.products">Quản lý sản phẩm</span>
                                         </a></li>
                                         <li><a class="dropdown-item" href="{{ route('admin.orders.index') }}">
-                                            <i class="fas fa-shopping-cart me-2"></i>Quản lý đơn hàng
+                                            <i class="fas fa-shopping-cart me-2"></i><span data-i18n="admin.orders">Quản lý đơn hàng</span>
                                         </a></li>
                                         <li><a class="dropdown-item" href="{{ route('admin.reviews.index') }}">
-                                            <i class="fas fa-star me-2"></i>Quản lý đánh giá
+                                            <i class="fas fa-star me-2"></i><span data-i18n="admin.reviews">Quản lý đánh giá</span>
                                         </a></li>
                                         <li><hr class="dropdown-divider"></li>
                                         <li><a class="dropdown-item" href="{{ route('shop') }}">
-                                            <i class="fas fa-store me-2"></i>Xem trang Shop
+                                            <i class="fas fa-store me-2"></i><span data-i18n="nav.shop_view">Xem trang Shop</span>
                                         </a></li>
                                     </ul>
                                 </li>
                             @else
                                 <!-- Regular User Links -->
-                                <li class="nav-item">
-                                    <a class="nav-link position-relative" href="{{ route('cart.index') }}">
-                                        <i class="fas fa-shopping-cart me-1"></i>Giỏ hàng
-                                        @php
-                                            $cartCount = 0;
-                                            if (auth()->check()) {
-                                                $cartCount = \App\Models\Cart::where('user_id', auth()->id())->sum('quantity');
-                                            } else {
-                                                $cart = session()->get('cart', []);
-                                                $cartCount = array_sum(array_column($cart, 'quantity'));
-                                            }
-                                        @endphp
-                                        @if($cartCount > 0)
-                                            <span class="cart-badge">{{ $cartCount }}</span>
-                                        @endif
-                                    </a>
-                                </li>
-                                <li class="nav-item dropdown">
-                                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                                        <i class="fas fa-user me-1"></i>Tài khoản
-                                    </a>
-                                    <ul class="dropdown-menu">
-                                        <li><a class="dropdown-item" href="{{ route('profile.edit') }}">
-                                            <i class="fas fa-user-edit me-2"></i>Thông tin cá nhân
-                                        </a></li>
-                                        <li><a class="dropdown-item" href="{{ route('orders.history') }}">
-                                            <i class="fas fa-history me-2"></i>Lịch sử đơn hàng
-                                        </a></li>
-                                        <li><a class="dropdown-item" href="{{ route('reviews.my') }}">
-                                            <i class="fas fa-star me-2"></i>Đánh giá của tôi
-                                        </a></li>
-                                    </ul>
-                                </li>
+                                
                             @endif
                         @endauth
                     </ul>
 
                     <!-- Right Side Menu -->
                     <ul class="navbar-nav ms-auto">
+                        <!-- Cart moved to right side -->
+                        <li class="nav-item">
+                            <a class="nav-link position-relative" href="{{ route('cart.index') }}">
+                                <i class="fas fa-shopping-cart me-1"></i><span data-i18n="nav.cart">Giỏ hàng</span>
+                                @php
+                                    $cartCount = 0;
+                                    if (auth()->check()) {
+                                        $cartCount = \App\Models\Cart::where('user_id', auth()->id())->sum('quantity');
+                                    } else {
+                                        $cart = session()->get('cart', []);
+                                        $cartCount = array_sum(array_column($cart, 'quantity'));
+                                    }
+                                @endphp
+                                @if($cartCount > 0)
+                                    <span class="cart-badge">{{ $cartCount }}</span>
+                                @endif
+                            </a>
+                        </li>
                         @guest
                             <!-- Guest Links -->
                             <li class="nav-item">
                                 <a class="nav-link" href="{{ route('login') }}">
-                                    <i class="fas fa-sign-in-alt me-1"></i>Đăng nhập
+                                    <i class="fas fa-sign-in-alt me-1"></i><span data-i18n="auth.login">Đăng nhập</span>
                                 </a>
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link" href="{{ route('register') }}">
-                                    <i class="fas fa-user-plus me-1"></i>Đăng ký
+                                    <i class="fas fa-user-plus me-1"></i><span data-i18n="auth.register">Đăng ký</span>
                                 </a>
                             </li>
                         @else
@@ -143,14 +157,20 @@
                                 </a>
                                 <ul class="dropdown-menu dropdown-menu-end">
                                     <li><a class="dropdown-item" href="{{ route('profile.edit') }}">
-                                        <i class="fas fa-user-edit me-2"></i>Thông tin cá nhân
+                                        <i class="fas fa-user-edit me-2"></i><span data-i18n="profile">Thông tin cá nhân</span>
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="{{ route('orders.history') }}">
+                                        <i class="fas fa-history me-2"></i><span data-i18n="orders.history">Lịch sử đơn hàng</span>
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="{{ route('reviews.my') }}">
+                                        <i class="fas fa-star me-2"></i><span data-i18n="reviews.my">Đánh giá của tôi</span>
                                     </a></li>
                                     <li><hr class="dropdown-divider"></li>
                                     <li>
                                         <form method="POST" action="{{ route('logout') }}">
                                             @csrf
                                             <button type="submit" class="dropdown-item">
-                                                <i class="fas fa-sign-out-alt me-2"></i>Đăng xuất
+                                                <i class="fas fa-sign-out-alt me-2"></i><span data-i18n="auth.logout">Đăng xuất</span>
                                             </button>
                                         </form>
                                     </li>
@@ -164,19 +184,7 @@
 
         <!-- Page Content -->
         <main class="flex-fill">
-            @if(session('success'))
-                <div class="alert alert-success alert-dismissible fade show" role="alert">
-                    <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-            @endif
             
-            @if(session('error'))
-                <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                    <i class="fas fa-exclamation-circle me-2"></i>{{ session('error') }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-            @endif
 
             @yield('content')
         </main>
@@ -243,29 +251,29 @@
                         </div>
                     </div>
                     <div class="col-md-2 mb-4">
-                        <h6>Danh mục</h6>
+                        <h6><span data-i18n="footer.categories">Danh mục</span></h6>
                         <ul class="list-unstyled">
-                            <li><a href="#" class="text-light">Chăm sóc da</a></li>
-                            <li><a href="#" class="text-light">Trang điểm</a></li>
-                            <li><a href="#" class="text-light">Nước hoa</a></li>
-                            <li><a href="#" class="text-light">Chăm sóc tóc</a></li>
+                            <li><a href="#" class="text-light" data-i18n="footer.cats.skin">Chăm sóc da</a></li>
+                            <li><a href="#" class="text-light" data-i18n="footer.cats.makeup">Trang điểm</a></li>
+                            <li><a href="#" class="text-light" data-i18n="footer.cats.perfume">Nước hoa</a></li>
+                            <li><a href="#" class="text-light" data-i18n="footer.cats.hair">Chăm sóc tóc</a></li>
                         </ul>
                     </div>
                     <div class="col-md-2 mb-4">
-                        <h6>Hỗ trợ</h6>
+                        <h6><span data-i18n="footer.support">Hỗ trợ</span></h6>
                         <ul class="list-unstyled">
-                            <li><a href="#" class="text-light">Tư vấn AI</a></li>
-                            <li><a href="#" class="text-light">Hướng dẫn mua</a></li>
-                            <li><a href="#" class="text-light">Chính sách đổi trả</a></li>
-                            <li><a href="#" class="text-light">Liên hệ</a></li>
+                            <li><a href="#" class="text-light" data-i18n="footer.support.ai">Tư vấn AI</a></li>
+                            <li><a href="#" class="text-light" data-i18n="footer.support.guide">Hướng dẫn mua</a></li>
+                            <li><a href="#" class="text-light" data-i18n="footer.support.return">Chính sách đổi trả</a></li>
+                            <li><a href="#" class="text-light" data-i18n="footer.support.contact">Liên hệ</a></li>
                         </ul>
                     </div>
                     <div class="col-md-4 mb-4">
-                        <h6>Đăng ký nhận tin</h6>
-                        <p>Nhận thông tin về sản phẩm mới và khuyến mãi đặc biệt</p>
+                        <h6><span data-i18n="footer.subscribe">Đăng ký nhận tin</span></h6>
+                        <p data-i18n="footer.subscribe.desc">Nhận thông tin về sản phẩm mới và khuyến mãi đặc biệt</p>
                         <div class="input-group">
-                            <input type="email" class="form-control" placeholder="Email của bạn">
-                            <button class="btn btn-primary">Đăng ký</button>
+                            <input type="email" class="form-control" placeholder="Email của bạn" data-i18n="footer.subscribe.placeholder">
+                            <button class="btn btn-primary" data-i18n="footer.subscribe.button">Đăng ký</button>
                         </div>
                     </div>
                 </div>
@@ -275,19 +283,32 @@
                         <p class="mb-0">&copy; 2024 BeautyAI Shop. All rights reserved.</p>
                     </div>
                     <div class="col-md-6 text-md-end">
-                        <p class="mb-0">Được phát triển với <i class="fas fa-heart text-danger"></i> và AI</p>
+                        <p class="mb-0"><span data-i18n="footer.built">Được phát triển với</span> <i class="fas fa-heart text-danger"></i> <span data-i18n="footer.and_ai">và AI</span></p>
                     </div>
                 </div>
             </div>
         </footer>
     </div>
     
+    <script>
+        window.__flashes = {!! json_encode([
+            session('success') ? ['type'=>'success','title'=>'Thành công','message'=>session('success')] : null,
+            session('error') ? ['type'=>'error','title'=>'Lỗi','message'=>session('error')] : null,
+            session('status') ? ['type'=>'info','title'=>'Thông báo','message'=>session('status')] : null,
+        ]) !!}.filter(Boolean);
+    </script>
     <!-- Bootstrap 5 JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <!-- AOS Animation -->
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
     
     <script>
+        const AI_ROUTES = @json([
+            'standard' => route('ai.chat.standard'),
+            'history' => route('ai.chat.history'),
+        ]);
+        const csrfTokenMeta = document.querySelector('meta[name="csrf-token"]');
+        const csrfToken = csrfTokenMeta ? csrfTokenMeta.getAttribute('content') : '';
         const setNavbarOffset = () => {
             const navbar = document.querySelector('.navbar');
             if (!navbar) {
@@ -321,7 +342,7 @@
             const input = document.getElementById('aiChatInput');
             const message = input.value.trim();
             if (message) {
-                addMessage('user', message);
+                addMessage('user', message, { timestamp: new Date().toISOString() });
                 input.value = '';
                 
                 // Disable send button while processing
@@ -354,7 +375,7 @@
                     const typing = document.getElementById('typingIndicator');
                     if (typing) typing.remove();
                     
-                    addMessage('ai', response);
+                    addMessage('ai', response, { timestamp: new Date().toISOString() });
                     
                     // Re-enable send button
                     if (sendBtn) {
@@ -362,11 +383,12 @@
                         sendBtn.innerHTML = '<i class="fas fa-paper-plane"></i>';
                     }
                 }).catch(error => {
+                    console.error('AI widget error:', error);
                     // Remove typing indicator
                     const typing = document.getElementById('typingIndicator');
                     if (typing) typing.remove();
                     
-                    addMessage('ai', 'Xin lỗi, tôi đang gặp sự cố. Vui lòng thử lại sau.');
+                    addMessage('ai', 'Xin lỗi, tôi đang gặp sự cố. Vui lòng thử lại sau.', { timestamp: new Date().toISOString() });
                     
                     // Re-enable send button
                     if (sendBtn) {
@@ -378,6 +400,35 @@
         }
 
         async function fetchAIResponse(message) {
+            if (AI_ROUTES && AI_ROUTES.standard) {
+                try {
+                    const response = await fetch(AI_ROUTES.standard, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': csrfToken,
+                            'Accept': 'application/json'
+                        },
+                        credentials: 'same-origin',
+                        body: JSON.stringify({
+                            message: message,
+                            mode: 'standard',
+                            source: 'widget'
+                        })
+                    });
+                    const data = await response.json();
+                    if (data.success && data.message) {
+                        return data.message;
+                    }
+                    throw new Error(data.message || 'AI backend error');
+                } catch (error) {
+                    console.warn('Falling back to client AI logic:', error);
+                }
+            }
+            return await fetchAIResponseFallback(message);
+        }
+
+        async function fetchAIResponseFallback(message) {
             const lowerMessage = message.toLowerCase();
             
             // Check for specific queries that need API calls
@@ -533,8 +584,12 @@
             return null;
         }
 
-        function addMessage(type, message) {
+        function addMessage(type, message, options = {}) {
             const messagesContainer = document.getElementById('aiChatMessages');
+            if (!messagesContainer) {
+                return;
+            }
+            const { timestamp = null, skipScroll = false } = options;
             const messageDiv = document.createElement('div');
             messageDiv.className = `mb-3 ${type === 'user' ? 'text-end' : ''}`;
             
@@ -555,8 +610,19 @@
             }
             
             messageDiv.appendChild(messageBubble);
+
+            if (timestamp) {
+                const timeBadge = document.createElement('small');
+                timeBadge.className = `chat-timestamp ${type === 'user' ? 'text-white-50' : 'text-muted'} ${type === 'user' ? 'd-block ms-auto' : 'd-block'}`;
+                const timeValue = new Date(timestamp);
+                timeBadge.textContent = timeValue.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+                messageDiv.appendChild(timeBadge);
+            }
+
             messagesContainer.appendChild(messageDiv);
-            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            if (!skipScroll) {
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            }
         }
 
         function generateAIResponse(message) {
@@ -593,8 +659,6 @@
                 'serum tóc': 'Serum tóc giúp phục hồi và bảo vệ tóc khỏi hư tổn.',
                 'dụng cụ': 'Dụng cụ làm đẹp: Cọ trang điểm, Gương, Kẹp mi, Bông tẩy trang.'
             };
-
-            const lowerMessage = message.toLowerCase();
             
             // Check for exact matches first
             for (const [key, response] of Object.entries(responses)) {
@@ -622,22 +686,78 @@
             return 'Cảm ơn bạn đã hỏi! Tôi có thể tư vấn về:<br><br><strong>🔍 Tìm kiếm sản phẩm:</strong><br>- "còn hàng không", "giá bao nhiêu"<br><br><strong>👩‍⚕️ Tư vấn da:</strong><br>- "da khô", "da dầu", "da nhạy cảm"<br>- "mụn", "chống lão hóa", "dưỡng ẩm"<br><br><strong>💄 Sản phẩm cụ thể:</strong><br>- "serum", "kem dưỡng", "sữa rửa mặt"<br>- "trang điểm", "nước hoa", "chăm sóc tóc"<br><br><strong>🚚 Dịch vụ:</strong><br>- "giao hàng", "đổi trả", "hướng dẫn"<br><br>Bạn quan tâm đến vấn đề gì?<br><br><a href="/shop" class="btn btn-sm btn-primary mt-2" target="_blank">Xem tất cả sản phẩm <i class="fas fa-external-link-alt ms-1"></i></a>';
         }
 
-        // Enter key to send message
-        document.getElementById('aiChatInput').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                sendMessage();
+        async function loadWidgetChatHistory() {
+            const messagesContainer = document.getElementById('aiChatMessages');
+            if (!messagesContainer || !AI_ROUTES || !AI_ROUTES.history) {
+                return;
             }
+            try {
+                const response = await fetch(AI_ROUTES.history, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    credentials: 'same-origin'
+                });
+                const data = await response.json();
+                if (data.success && Array.isArray(data.history) && data.history.length > 0) {
+                    messagesContainer.innerHTML = '';
+                    const recentHistory = data.history.slice(-6);
+                    recentHistory.forEach(msg => {
+                        addMessage(msg.type, msg.content, {
+                            timestamp: msg.timestamp,
+                            skipScroll: true
+                        });
+                    });
+                    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                }
+            } catch (error) {
+                console.error('Không thể tải lịch sử chat widget:', error);
+            }
+        }
+
+        // Initialize AI Chat when DOM is ready
+        document.addEventListener('DOMContentLoaded', function() {
+            // Enter key to send message
+            const aiChatInput = document.getElementById('aiChatInput');
+            if (aiChatInput) {
+                aiChatInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        sendMessage();
+                    }
+                });
+            }
+
+
+            // Smooth scroll to AI consultation section if hash is present
+            if (window.location.hash === '#ai-consultation') {
+                setTimeout(function() {
+                    const element = document.getElementById('ai-consultation');
+                    if (element) {
+                        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                    // Also open chat window
+                    const chatWindow = document.getElementById('aiChatWindow');
+                    if (chatWindow) {
+                        chatWindow.style.display = 'block';
+                    }
+                }, 100);
+            }
+            loadWidgetChatHistory();
         });
 
         // Navbar scroll effect
         window.addEventListener('scroll', function() {
             const navbar = document.querySelector('.navbar');
-            if (window.scrollY > 50) {
-                navbar.style.background = 'rgba(255, 255, 255, 0.98)';
-                navbar.style.boxShadow = '0 5px 20px rgba(0,0,0,0.1)';
-            } else {
-                navbar.style.background = 'rgba(255, 255, 255, 0.95)';
-                navbar.style.boxShadow = '0 10px 30px rgba(0,0,0,0.1)';
+            if (navbar) {
+                if (window.scrollY > 50) {
+                    navbar.style.background = 'rgba(255, 255, 255, 0.98)';
+                    navbar.style.boxShadow = '0 5px 20px rgba(0,0,0,0.1)';
+                } else {
+                    navbar.style.background = 'rgba(255, 255, 255, 0.95)';
+                    navbar.style.boxShadow = '0 10px 30px rgba(0,0,0,0.1)';
+                }
             }
         });
     </script>

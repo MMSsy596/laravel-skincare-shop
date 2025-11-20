@@ -38,4 +38,15 @@ return [
         'maps_api_key' => env('GOOGLE_MAPS_API_KEY'),
     ],
 
+    'gemini' => [
+        'api_key' => env('GEMINI_API_KEY'),
+    ],
+
+    'payment' => [
+        'bank_name' => env('PAYMENT_BANK_NAME', 'Vietcombank'),
+        'account_number' => env('PAYMENT_ACCOUNT_NUMBER', ''),
+        'account_name' => env('PAYMENT_ACCOUNT_NAME', ''),
+        'branch' => env('PAYMENT_BRANCH', ''),
+    ],
+
 ];
